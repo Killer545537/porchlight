@@ -83,14 +83,15 @@ The trade-off: `User.hashed_password` being nullable means `/users/login` has to
 
 ## Config
 
-All settings live in `backend/auth.py`'s `Settings` (`pydantic-settings`, reads `.env` if present — see `backend/.env.example`). Every field has a working local-dev default, including `SECRET_KEY`, so the app runs with zero configuration; only Google sign-in requires real values (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) before it'll do anything beyond redirect to a broken consent screen.
+All settings live in `backend/config.py`'s `Settings` (`pydantic-settings`, reads `.env` if present — see `backend/.env.example`), imported by `auth.py` rather than defined there — `frontend_url` and `database_url` aren't auth-specific and `database.py` needs them without importing `auth.py`. Every field has a working local-dev default, including `SECRET_KEY`, so the app runs with zero configuration; only Google sign-in requires real values (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) before it'll do anything beyond redirect to a broken consent screen.
 
 | Setting | Default | Purpose |
 |---|---|---|
 | `SECRET_KEY` | `dev-insecure-secret-change-me` | JWT signing key — override before deploying |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | `""` | From Google Cloud Console |
 | `GOOGLE_REDIRECT_URI` | `http://localhost:8000/auth/google/callback` | Must exactly match the URI registered in Google Cloud Console |
-| `FRONTEND_URL` | `http://localhost:3000` | Where the Google callback sends the browser after issuing a token |
+| `FRONTEND_URL` | `http://localhost:3000` | Where the Google callback sends the browser after issuing a token — also the only origin the API's CORS policy allows |
+| `DATABASE_URL` | local SQLite file | See `DATABASE.md` |
 
 ## Verifying
 

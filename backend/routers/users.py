@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from auth import create_access_token, get_current_user, hash_password, verify_password
+from auth import get_current_user
 from database import get_db
-from middleware.logging import request_logger
+from domain.user.service import UserService
+from domain.user.types import Token, UserCreate, UserOut
 from models import User
-from schemas import Token, UserCreate, UserOut
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -21,25 +21,7 @@ router = APIRouter(prefix="/users", tags=["users"])
     responses={409: {"description": "Email already registered"}},
 )
 def signup(payload: UserCreate, db: Session = Depends(get_db)) -> Token:
-    if db.query(User).filter(User.email == payload.email).first():
-        request_logger.info(
-            "signup rejected: email already registered (%s)", payload.email
-        )
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Email already registered"
-        )
-
-    user = User(
-        email=payload.email,
-        name=payload.name,
-        hashed_password=hash_password(payload.password),
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-
-    request_logger.info("signup: new user id=%s email=%s", user.id, user.email)
-    return Token(access_token=create_access_token(subject=str(user.id)))
+    return UserService(db).signup(payload)
 
 
 @router.post(
@@ -56,30 +38,7 @@ def signup(payload: UserCreate, db: Session = Depends(get_db)) -> Token:
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
 ) -> Token:
-    user = db.query(User).filter(User.email == form_data.username).first()
-    if user is None or user.hashed_password is None:
-        request_logger.warning(
-            "login failed: %s (%s)",
-            "unknown email" if user is None else "google-only account",
-            form_data.username,
-        )
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password"
-            if user is None
-            else "This account signs in with Google",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    if not verify_password(form_data.password, user.hashed_password):
-        request_logger.warning("login failed: bad password (user_id=%s)", user.id)
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    request_logger.info("login: user_id=%s", user.id)
-    return Token(access_token=create_access_token(subject=str(user.id)))
+    return UserService(db).login(form_data.username, form_data.password)
 
 
 @router.get(

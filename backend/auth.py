@@ -5,35 +5,20 @@ import urllib.request
 from datetime import UTC, datetime, timedelta
 
 import bcrypt
-from fastapi import Depends, HTTPException, status
+from config import settings
+from database import get_db
+from domain.errors import AuthenticationError
+from domain.user.repository import UserRepository
+from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from sqlalchemy.orm import Session
-
-from database import get_db
 from middleware.logging import request_logger
 from models import User
+from sqlalchemy.orm import Session
 
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
-
-
-class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
-
-    secret_key: str = "dev-insecure-secret-change-me"  # ponytail: fine for local/demo, override via env in prod
-    algorithm: str = "HS256"
-    access_token_expire_minutes: int = 60 * 24 * 7  # 1 week, no refresh rotation
-
-    google_client_id: str = ""
-    google_client_secret: str = ""
-    google_redirect_uri: str = "http://localhost:8000/auth/google/callback"
-    frontend_url: str = "http://localhost:3000"
-
-
-settings = Settings()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
 
@@ -57,26 +42,21 @@ def create_access_token(subject: str, expires_delta: timedelta | None = None) ->
 def get_current_user(
     token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
 ) -> User:
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
     try:
         payload = jwt.decode(
             token, settings.secret_key, algorithms=[settings.algorithm]
         )
         user_id = payload.get("sub")
         if user_id is None:
-            raise credentials_exception
+            raise AuthenticationError("Could not validate credentials")
     except JWTError as e:
         request_logger.warning("token rejected: %s", e)
-        raise credentials_exception from e
+        raise AuthenticationError("Could not validate credentials") from e
 
-    user = db.get(User, int(user_id))
+    user = UserRepository(db).get_by_id(int(user_id))
     if user is None:
         request_logger.warning("token rejected: user id %s no longer exists", user_id)
-        raise credentials_exception
+        raise AuthenticationError("Could not validate credentials")
     return user
 
 
@@ -116,7 +96,6 @@ def fetch_google_userinfo(access_token: str) -> dict:
 
 
 def demo() -> None:
-    """ponytail: hashing/JWT self-check, run with `uv run python auth.py`."""
     hashed = hash_password("correct horse battery staple")
     assert verify_password("correct horse battery staple", hashed)
     assert not verify_password("wrong password", hashed)

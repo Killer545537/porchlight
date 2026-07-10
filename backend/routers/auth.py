@@ -1,19 +1,10 @@
-import urllib.error
-
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
-from auth import (
-    create_access_token,
-    exchange_google_code,
-    fetch_google_userinfo,
-    google_authorize_url,
-    settings,
-)
+from auth import google_authorize_url, settings
 from database import get_db
-from middleware.logging import request_logger
-from models import User
+from domain.user.service import UserService
 
 router = APIRouter(prefix="/auth/google", tags=["auth"])
 
@@ -45,39 +36,5 @@ def google_login() -> RedirectResponse:
     },
 )
 def google_callback(code: str, db: Session = Depends(get_db)) -> RedirectResponse:
-    try:
-        tokens = exchange_google_code(code)
-        userinfo = fetch_google_userinfo(tokens["access_token"])
-    except (urllib.error.URLError, KeyError) as e:
-        request_logger.warning(
-            "google oauth failed: token/userinfo exchange error: %s", e
-        )
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Google authentication failed",
-        ) from e
-
-    if not userinfo.get("email_verified") or not userinfo.get("email"):
-        request_logger.warning(
-            "google oauth rejected: email not verified (%s)", userinfo.get("email")
-        )
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Google account email not verified",
-        )
-
-    email = userinfo["email"]
-    user = db.query(User).filter(User.email == email).first()
-    if user is None:
-        user = User(email=email, name=userinfo.get("name", email))
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-        request_logger.info(
-            "google oauth: created new user id=%s email=%s", user.id, email
-        )
-    else:
-        request_logger.info("google oauth: login user_id=%s", user.id)
-
-    token = create_access_token(subject=str(user.id))
-    return RedirectResponse(f"{settings.frontend_url}/auth/callback?token={token}")
+    token = UserService(db).google_callback(code)
+    return RedirectResponse(f"{settings.frontend_url}/auth/callback?token={token.access_token}")

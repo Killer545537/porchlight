@@ -1,10 +1,13 @@
 import models  # noqa: F401  # registers ORM tables on Base.metadata
+from config import settings
 from database import Base, engine
+from domain.errors import register_exception_handlers
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from middleware.logging import RequestLogMiddleware, setup_logging
 from routers.auth import router as google_auth_router
+from routers.listings import router as listings_router
 from routers.users import router as users_router
 
 setup_logging()
@@ -24,13 +27,19 @@ app = FastAPI(
             "name": "auth",
             "description": "Google OAuth sign-in — redirect-based, not called directly by API clients.",
         },
+        {
+            "name": "listings",
+            "description": "Search, create, and manage listings. Writes are host-only.",
+        },
     ],
 )
+
+register_exception_handlers(app)
 
 app.add_middleware(RequestLogMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[settings.frontend_url],
     allow_methods=["*"],
     allow_headers=["*"],
     allow_credentials=True,
@@ -39,6 +48,7 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(users_router)
 app.include_router(google_auth_router)
+app.include_router(listings_router)
 
 
 @app.get("/health", tags=["system"], summary="Health check")

@@ -2,6 +2,8 @@
 
 SQLite via SQLAlchemy 2.0 (`Mapped`/`mapped_column` declarative style). Models live in `backend/models/`, one file per entity; `backend/models/__init__.py` re-exports everything so callers do `from models import User, Listing, ...`. `Base.metadata.create_all()` creates all tables on startup — no Alembic migrations at this scope (see [ARCHITECTURE.md](ARCHITECTURE.md#data-layer)).
 
+The connection string is `config.py`'s `Settings.database_url`, defaulting to a local SQLite file next to the backend source (`backend/porchlight.db`). Set the `DATABASE_URL` env var to point at Postgres instead — `database.py` picks the right `connect_args` based on the URL scheme, so no ORM code changes are needed (the upgrade path `ARCHITECTURE.md` already documents).
+
 ## ER diagram
 
 ```mermaid
