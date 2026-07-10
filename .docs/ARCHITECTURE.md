@@ -74,7 +74,7 @@ Real JWT: `bcrypt` for password hashing, `python-jose` for token issuance/verifi
 Stdlib `logging` to stdout (captured natively by Railway) plus a per-request correlation ID via `middleware/logging.py`:
 
 - Every request logs an entry line (`→ METHOD path`) and exit line (`← METHOD path status (Nms)`) tagged with a short UUID.
-- The same ID is attachable to business-logic log lines (e.g. booking overlap rejections, login failures) by importing `request_id_ctx` from `middleware.logging`.
+- Business-logic code logs through `request_logger` (`middleware.logging`) instead of the stdlib `logging` module directly — it's a thin `LoggerAdapter` that stamps every call with the current request's ID automatically, no `extra=` boilerplate at call sites. `auth.py` and `routers/users.py`/`routers/auth.py` already use it for signup/login outcomes and rejected tokens.
 - The ID is returned as `X-Request-ID` so a failed frontend request can be grepped straight to its full backend log trail.
 
 No distributed tracing service (OpenTelemetry, Datadog, etc.) — single-process stdout logging is the whole story for one FastAPI service on Railway.
@@ -89,7 +89,7 @@ No distributed tracing service (OpenTelemetry, Datadog, etc.) — single-process
 ## Trade-offs
 
 | Decision | Why | What it costs |
-|---|---|---|
+| --- | --- | --- |
 | Modular monolith over microservices | Finishable in 24h solo, one clear request path to explain in evaluation | Doesn't scale as independent services under real load — out of scope here |
 | SQLite over Postgres | Zero setup, fine for seeded demo data | Swap to Postgres later is a one-line connection string change via SQLAlchemy |
 | Local disk uploads over S3/Cloudinary | No extra service, works with a Railway volume | Not horizontally scalable across multiple backend instances — fine for one instance |

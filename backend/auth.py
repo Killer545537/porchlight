@@ -12,6 +12,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.orm import Session
 
 from database import get_db
+from middleware.logging import request_logger
 from models import User
 
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -69,10 +70,12 @@ def get_current_user(
         if user_id is None:
             raise credentials_exception
     except JWTError as e:
+        request_logger.warning("token rejected: %s", e)
         raise credentials_exception from e
 
     user = db.get(User, int(user_id))
     if user is None:
+        request_logger.warning("token rejected: user id %s no longer exists", user_id)
         raise credentials_exception
     return user
 
@@ -140,7 +143,9 @@ def demo() -> None:
     settings.google_redirect_uri = "http://localhost:8000/auth/google/callback"
     url = google_authorize_url()
     assert "client_id=test-client-id" in url
-    assert "redirect_uri=http%3A%2F%2Flocalhost%3A8000%2Fauth%2Fgoogle%2Fcallback" in url
+    assert (
+        "redirect_uri=http%3A%2F%2Flocalhost%3A8000%2Fauth%2Fgoogle%2Fcallback" in url
+    )
     assert "response_type=code" in url
 
     print("auth.py self-check passed")

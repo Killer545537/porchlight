@@ -19,6 +19,17 @@ class _DefaultRequestId(logging.Filter):
         return True
 
 
+class _RequestIdAdapter(logging.LoggerAdapter):
+    """Tags every log call with the current request's correlation ID."""
+
+    def process(self, msg, kwargs):
+        kwargs.setdefault("extra", {})["request_id"] = request_id_ctx.get()
+        return msg, kwargs
+
+
+request_logger = _RequestIdAdapter(logger, {})
+
+
 def setup_logging() -> None:
     logging.basicConfig(
         level=logging.INFO,
@@ -36,14 +47,13 @@ class RequestLogMiddleware(BaseHTTPMiddleware):
         rid = str(uuid.uuid4())[:8]
         request_id_ctx.set(rid)
         start = time.perf_counter()
-        logger.info(f"→ {request.method} {request.url.path}", extra={"request_id": rid})
+        request_logger.info(f"→ {request.method} {request.url.path}")
 
         response = await call_next(request)
 
         duration_ms = (time.perf_counter() - start) * 1000
-        logger.info(
-            f"← {request.method} {request.url.path} {response.status_code} ({duration_ms:.1f}ms)",
-            extra={"request_id": rid},
+        request_logger.info(
+            f"← {request.method} {request.url.path} {response.status_code} ({duration_ms:.1f}ms)"
         )
         response.headers["X-Request-ID"] = rid
         return response

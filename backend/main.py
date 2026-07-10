@@ -10,7 +10,22 @@ from routers.users import router as users_router
 setup_logging()
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Porchlight API", description="API for the Porchlight project")
+app = FastAPI(
+    title="Porchlight API",
+    description="API for the Porchlight project",
+    version="0.1.0",
+    openapi_tags=[
+        {"name": "system", "description": "Health checks and service status."},
+        {
+            "name": "users",
+            "description": "Email/password signup, login, and the current user's profile.",
+        },
+        {
+            "name": "auth",
+            "description": "Google OAuth sign-in — redirect-based, not called directly by API clients.",
+        },
+    ],
+)
 
 app.add_middleware(RequestLogMiddleware)
 app.add_middleware(
@@ -26,6 +41,6 @@ app.include_router(users_router)
 app.include_router(google_auth_router)
 
 
-@app.get("/health")
+@app.get("/health", tags=["system"], summary="Health check")
 def health():
     return {"status": "ok"}
