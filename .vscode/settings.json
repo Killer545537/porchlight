@@ -1,0 +1,20 @@
+{
+    "biome.lsp.bin": "./frontend/node_modules/@biomejs/biome/bin/biome",
+    "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
+        }
+    },
+    "ruff.path": ["${workspaceFolder}/backend/.venv/bin/ruff"],
+    "ruff.interpreter": ["${workspaceFolder}/backend/.venv/bin/python"],
+    "ruff.importStrategy": "fromEnvironment",
+    "ruff.nativeServer": true,
+    "ty.path": ["${workspaceFolder}/backend/.venv/bin/ty"],
+    "ty.interpreter": "${workspaceFolder}/backend/.venv/bin/python",
+    "ty.importStrategy": "fromEnvironment"
+}
