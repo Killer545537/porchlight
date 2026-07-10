@@ -337,7 +337,7 @@ bcrypt = [
 [[package]]
 name = "porchlight-backend"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
     { name = "passlib", extra = ["bcrypt"] },
