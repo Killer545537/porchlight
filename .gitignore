@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.db
+node_modules/
+.next/
+.env
+.env.local
+static/uploads/*
+!static/uploads/.gitkeep
