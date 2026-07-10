@@ -31,7 +31,9 @@ def create_listing(
     "",
     response_model=list[ListingOut],
     summary="Search listings",
-    description="Public — no auth required. Filters are all optional and combine with AND.",
+    description="Public — no auth required. Filters are all optional and combine with AND. "
+    "min_latitude/max_latitude/min_longitude/max_longitude filter to a map viewport's "
+    "bounding box, for an interactive map fetching pins for its current view.",
 )
 def list_listings(
     filters: Annotated[ListingFilters, Query()],

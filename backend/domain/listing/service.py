@@ -75,6 +75,8 @@ def demo() -> None:
                 description="Cozy",
                 city="Tahoe",
                 country="US",
+                latitude=39.0968,
+                longitude=-120.0324,
                 price_per_night=100.0,
                 max_guests=4,
                 bedrooms=2,
@@ -85,6 +87,20 @@ def demo() -> None:
         assert sorted(a.name for a in listing.amenities) == ["parking", "wifi"]
         assert service.get_listing(listing.id).id == listing.id
         assert len(service.list_listings(ListingFilters(city="Tahoe"))) == 1
+
+        in_bounds = ListingFilters(
+            min_latitude=38.0, max_latitude=40.0, min_longitude=-121.0, max_longitude=-119.0
+        )
+        assert len(service.list_listings(in_bounds)) == 1
+
+        out_of_bounds = ListingFilters(min_latitude=0.0, max_latitude=1.0)
+        assert len(service.list_listings(out_of_bounds)) == 0
+
+        try:
+            ListingFilters(min_latitude=10, max_latitude=5)
+            raise AssertionError("expected ValidationError")
+        except pydantic.ValidationError:
+            pass
 
         try:
             service.get_listing(999_999)

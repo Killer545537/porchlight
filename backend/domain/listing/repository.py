@@ -21,6 +21,14 @@ class ListingRepository:
             query = query.filter(Listing.price_per_night <= filters.max_price)
         if filters.max_guests is not None:
             query = query.filter(Listing.max_guests >= filters.max_guests)
+        if filters.min_latitude is not None:
+            query = query.filter(Listing.latitude >= filters.min_latitude)
+        if filters.max_latitude is not None:
+            query = query.filter(Listing.latitude <= filters.max_latitude)
+        if filters.min_longitude is not None:
+            query = query.filter(Listing.longitude >= filters.min_longitude)
+        if filters.max_longitude is not None:
+            query = query.filter(Listing.longitude <= filters.max_longitude)
         return query.offset(filters.offset).limit(filters.limit).all()
 
     def get_or_create_amenities(self, names: list[str]) -> list[Amenity]:

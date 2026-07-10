@@ -39,6 +39,8 @@ def demo() -> None:
             description="Cozy",
             city="Tahoe",
             country="US",
+            latitude=39.0968,
+            longitude=-120.0324,
             price_per_night=100.0,
             max_guests=4,
             bedrooms=2,

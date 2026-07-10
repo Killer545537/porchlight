@@ -32,6 +32,8 @@ erDiagram
         string description
         string city
         string country
+        float latitude
+        float longitude
         float price_per_night
         int max_guests
         int bedrooms
@@ -78,7 +80,7 @@ erDiagram
 | Model | File | Notes |
 |---|---|---|
 | `User` | `models/user.py` | One role — every user can host listings and book others'. `email` unique. `hashed_password` is nullable — `NULL` means a Google-only account (see [AUTH.md](AUTH.md)). |
-| `Listing` | `models/listing.py` | Owned by a `User` (`host_id`). Also defines `listing_amenities`, the plain `Table` backing the `Listing`↔`Amenity` many-to-many. |
+| `Listing` | `models/listing.py` | Owned by a `User` (`host_id`). `latitude`/`longitude` are required (a listing without coordinates can't appear on the map) and indexed to support the bounding-box search `GET /listings` exposes for an interactive map's viewport. Also defines `listing_amenities`, the plain `Table` backing the `Listing`↔`Amenity` many-to-many. |
 | `Photo` | `models/photo.py` | Belongs to one `Listing`. |
 | `Amenity` | `models/amenity.py` | Flat lookup table (`wifi`, `parking`, ...), `name` unique. |
 | `Booking` | `models/booking.py` | `guest_id` → `User`, `listing_id` → `Listing`, date range `[check_in, check_out)`. |

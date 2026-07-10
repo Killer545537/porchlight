@@ -33,6 +33,8 @@ class Listing(Base):
     description: Mapped[str]
     city: Mapped[str] = mapped_column(index=True)
     country: Mapped[str]
+    latitude: Mapped[float] = mapped_column(index=True)
+    longitude: Mapped[float] = mapped_column(index=True)
     price_per_night: Mapped[float]
     max_guests: Mapped[int]
     bedrooms: Mapped[int]
