@@ -16,7 +16,7 @@ flowchart LR
 
     subgraph BE["backend/ — FastAPI"]
         MW["middleware/logging.py<br/>request-ID + structured logs"]
-        R["routers/<br/>listings · bookings · users · uploads"]
+        R["routers/<br/>listings · bookings · users · auth (Google) · uploads"]
         ORM[SQLAlchemy ORM]
         MW --> R --> ORM
     end
@@ -34,20 +34,21 @@ flowchart LR
 
 ```sh
 backend/
-├── main.py               app factory, CORS, static mount, middleware wiring
+├── main.py               app factory, CORS, static mount, middleware + router wiring
 ├── database.py            SQLAlchemy engine/session
-├── models.py               ORM models (User, Listing, Photo, Amenity, Booking, Review, Favorite)
+├── models/                 ORM models, one file per entity (see DATABASE.md)
 ├── schemas.py               Pydantic request/response models
-├── auth.py                  password hashing, JWT issue/verify, get_current_user dependency
-├── seed.py                  seed script (hosts, listings, photos, sample bookings)
+├── auth.py                  password hashing (bcrypt), JWT issue/verify, get_current_user, Google OAuth helpers
+├── seed.py                  seed script (hosts, listings, photos, sample bookings) — not yet built
 ├── middleware/
 │   ├── __init__.py
 │   └── logging.py            request-ID middleware + structured logging setup
 ├── routers/
-│   ├── listings.py           search/filter, CRUD (host-only write)
-│   ├── bookings.py           create with overlap check, my-trips
-│   ├── users.py               signup/login
-│   └── uploads.py             image upload endpoint
+│   ├── users.py               signup/login/me
+│   ├── auth.py                 Google OAuth login + callback
+│   ├── listings.py            search/filter, CRUD (host-only write) — not yet built
+│   ├── bookings.py            create with overlap check, my-trips — not yet built
+│   └── uploads.py             image upload endpoint — not yet built
 └── static/uploads/            stored listing photos
 ```
 
@@ -66,7 +67,7 @@ backend/
 
 ## Auth
 
-Real JWT: `passlib[bcrypt]` for password hashing, `python-jose` for token issuance/verification, `get_current_user` FastAPI dependency for protected routes. Access-token only, generous expiry — no refresh-token rotation or rate limiting. Acceptable for a demo; noted as a known simplification, not an oversight.
+Real JWT: `bcrypt` for password hashing, `python-jose` for token issuance/verification, `get_current_user` FastAPI dependency for protected routes. Google sign-in (OAuth2 authorization code flow) is a second way to obtain the same JWT — accounts are linked by verified email, no separate `google_id` column. Access-token only, generous expiry — no refresh-token rotation or rate limiting. Acceptable for a demo; noted as a known simplification, not an oversight. Full design in [AUTH.md](AUTH.md).
 
 ## Logging and tracing
 
@@ -94,6 +95,7 @@ No distributed tracing service (OpenTelemetry, Datadog, etc.) — single-process
 | Local disk uploads over S3/Cloudinary | No extra service, works with a Railway volume | Not horizontally scalable across multiple backend instances — fine for one instance |
 | Stdout logging + request ID over APM/tracing service | Zero infra, fully sufficient for one process | No cross-service tracing, alerting, or long-term log retention |
 | Access-token JWT only, no refresh rotation | Faster to build, standard FastAPI pattern | Less secure session lifecycle than production-grade auth |
+| Google OAuth without a `state` CSRF param | Smaller surface for a demo | Callback isn't bound to the browser session that started it |
 
 ## Upgrade paths (not built, noted for the record)
 

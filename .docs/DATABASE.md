@@ -19,7 +19,7 @@ erDiagram
     USER {
         int id PK
         string email UK
-        string hashed_password
+        string hashed_password "nullable"
         string name
         datetime created_at
     }
@@ -75,7 +75,7 @@ erDiagram
 
 | Model | File | Notes |
 |---|---|---|
-| `User` | `models/user.py` | One role — every user can host listings and book others'. `email` unique. |
+| `User` | `models/user.py` | One role — every user can host listings and book others'. `email` unique. `hashed_password` is nullable — `NULL` means a Google-only account (see [AUTH.md](AUTH.md)). |
 | `Listing` | `models/listing.py` | Owned by a `User` (`host_id`). Also defines `listing_amenities`, the plain `Table` backing the `Listing`↔`Amenity` many-to-many. |
 | `Photo` | `models/photo.py` | Belongs to one `Listing`. |
 | `Amenity` | `models/amenity.py` | Flat lookup table (`wifi`, `parking`, ...), `name` unique. |

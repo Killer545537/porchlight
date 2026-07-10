@@ -20,7 +20,7 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(unique=True, index=True)
-    hashed_password: Mapped[str]
+    hashed_password: Mapped[str | None] = mapped_column(default=None)
     name: Mapped[str]
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
