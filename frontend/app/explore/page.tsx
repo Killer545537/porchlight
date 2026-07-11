@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { ListingCard } from "@/components/ListingCard";
 import { MapView } from "@/components/MapView";
 import { SearchWidget } from "@/components/SearchWidget";
@@ -27,6 +27,11 @@ const PRICE_RANGES = [
   { key: "gt400", label: "$400+", min: 400, max: undefined },
 ] as const;
 
+type BboxFilters = Pick<
+  ListingFilters,
+  "min_latitude" | "max_latitude" | "min_longitude" | "max_longitude"
+>;
+
 function ExploreInner() {
   const router = useRouter();
   const params = useSearchParams();
@@ -43,17 +48,30 @@ function ExploreInner() {
   const [amenities, setAmenities] = useState<Set<string>>(new Set());
   const [view, setView] = useState<"grid" | "map">("grid");
   const [hovered, setHovered] = useState<number | null>(null);
+  const [bbox, setBbox] = useState<BboxFilters | null>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   // All listings power the destination + amenity option lists.
   const { data: allListings } = useListings({ limit: 100 });
 
   const price = PRICE_RANGES.find((p) => p.key === priceKey) ?? PRICE_RANGES[0];
+  const mapActive = view === "map";
+  const bboxApplies = bbox && (isDesktop || mapActive);
   const filters: ListingFilters = {
     city: search.city ?? undefined,
     max_guests: totalGuests(search) || undefined,
     min_price: price.min,
     max_price: price.max,
     limit: 100,
+    ...(bboxApplies ? bbox : {}),
   };
   const { data: listings, isLoading } = useListings(filters);
 
@@ -85,9 +103,37 @@ function ExploreInner() {
   const clearAll = () => {
     setPriceKey("any");
     setAmenities(new Set());
+    setBbox(null);
     setDraft({ ...draft, city: null, checkIn: null, checkOut: null });
     router.replace("/explore");
   };
+
+  const listingGrid = (
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(min(250px,100%),1fr))] gap-[18px] lg:grid-cols-1 lg:gap-3.5 xl:grid-cols-2">
+      {results.map((listing) => (
+        <div
+          key={listing.id}
+          onMouseEnter={() => setHovered(listing.id)}
+          onMouseLeave={() => setHovered(null)}
+        >
+          <ListingCard
+            listing={listing}
+            highlighted={hovered === listing.id}
+          />
+        </div>
+      ))}
+    </div>
+  );
+
+  const mapPanel = (
+    <MapView
+      listings={results}
+      activeId={hovered}
+      onHover={setHovered}
+      onBoundsChange={setBbox}
+      className="lg:h-[calc(100vh-140px)] lg:min-h-0"
+    />
+  );
 
   return (
     <div className="mx-auto w-full max-w-[1440px] px-[clamp(14px,3vw,28px)] pb-20 pt-3.5">
@@ -129,8 +175,13 @@ function ExploreInner() {
 
         <button
           type="button"
-          onClick={() => setView((v) => (v === "map" ? "grid" : "map"))}
-          className="rounded-full border border-line px-[15px] py-2.5 text-ink transition-colors hover:border-ink3"
+          onClick={() =>
+            setView((v) => {
+              if (v === "map") setBbox(null);
+              return v === "map" ? "grid" : "map";
+            })
+          }
+          className="rounded-full border border-line px-[15px] py-2.5 text-ink transition-colors hover:border-ink3 lg:hidden"
           style={{ font: "500 13px var(--font-sans)" }}
         >
           {view === "map" ? "Show list" : "Show map"}
@@ -214,14 +265,19 @@ function ExploreInner() {
             </button>
           }
         />
-      ) : view === "map" ? (
-        <MapView listings={results} activeId={hovered} onHover={setHovered} />
       ) : (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(250px,100%),1fr))] gap-[18px]">
-          {results.map((listing) => (
-            <ListingCard key={listing.id} listing={listing} />
-          ))}
-        </div>
+        <>
+          {/* Desktop: split list + map */}
+          <div className="hidden lg:grid lg:grid-cols-[1fr_minmax(380px,42%)] lg:gap-4">
+            <div>{listingGrid}</div>
+            <div className="sticky top-[76px] self-start">{mapPanel}</div>
+          </div>
+
+          {/* Mobile: toggle between grid and map */}
+          <div className="lg:hidden">
+            {mapActive ? mapPanel : listingGrid}
+          </div>
+        </>
       )}
     </div>
   );

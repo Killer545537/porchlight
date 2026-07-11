@@ -323,7 +323,7 @@ export default function ListingPage() {
             <div className="mono mb-3 text-[10.5px] tracking-[0.18em] text-ink3">
               WHERE YOU&apos;LL BE
             </div>
-            <MapView listings={[listing]} />
+            <MapView listings={[listing]} compact />
           </div>
         </div>
 

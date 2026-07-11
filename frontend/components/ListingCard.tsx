@@ -9,7 +9,13 @@ import type { Listing } from "@/lib/types";
 import { useAuth } from "./AuthProvider";
 import { useToast } from "./ToastProvider";
 
-export function ListingCard({ listing }: { listing: Listing }) {
+export function ListingCard({
+  listing,
+  highlighted,
+}: {
+  listing: Listing;
+  highlighted?: boolean;
+}) {
   const router = useRouter();
   const { isAuthed } = useAuth();
   const { toast } = useToast();
@@ -42,7 +48,9 @@ export function ListingCard({ listing }: { listing: Listing }) {
   return (
     <Link
       href={`/listings/${listing.id}`}
-      className="group block overflow-hidden rounded-porch border border-line bg-surface no-underline transition-[transform,box-shadow] duration-200 hover:-translate-y-[3px] hover:shadow-porch"
+      className={`group block overflow-hidden rounded-porch border bg-surface no-underline transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-[3px] hover:shadow-porch ${
+        highlighted ? "border-ink shadow-porch" : "border-line"
+      }`}
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-surface2">
         <div
