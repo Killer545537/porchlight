@@ -51,8 +51,9 @@ backend/
 │   ├── user/                 types.py, validation.py, repository.py, service.py
 │   ├── listing/               types.py, validation.py, repository.py, service.py
 │   ├── booking/                types.py, validation.py, repository.py, service.py
-│   └── review/                  types.py, repository.py, service.py — no validation.py;
-│                                  rating/comment are plain Field() bounds, no cross-field rule
+│   ├── review/                  types.py, repository.py, service.py — no validation.py;
+│   │                              rating/comment are plain Field() bounds, no cross-field rule
+│   └── favorite/                types.py, repository.py, service.py — no validation.py either
 ├── seed.py                  seed script (hosts, listings, photos, sample bookings) — not yet built
 ├── middleware/
 │   ├── __init__.py
@@ -63,6 +64,7 @@ backend/
 │   ├── listings.py            search/filter, CRUD (host-only write)
 │   ├── bookings.py            create with overlap check, my trips, host dashboard
 │   ├── reviews.py             leave/list/edit/delete — gated on a completed booking
+│   ├── favorites.py           wishlist — add/list/remove
 │   └── uploads.py             image upload endpoint — not yet built
 └── static/uploads/            stored listing photos
 ```

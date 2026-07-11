@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from middleware.logging import RequestLogMiddleware, setup_logging
 from routers.auth import router as google_auth_router
 from routers.bookings import router as bookings_router
+from routers.favorites import router as favorites_router
 from routers.listings import router as listings_router
 from routers.reviews import router as reviews_router
 from routers.users import router as users_router
@@ -42,6 +43,10 @@ app = FastAPI(
             "name": "reviews",
             "description": "Leave a review after a completed stay, list a listing's reviews.",
         },
+        {
+            "name": "favorites",
+            "description": "A user's wishlist — add, list, and remove favorited listings.",
+        },
     ],
 )
 
@@ -62,6 +67,7 @@ app.include_router(google_auth_router)
 app.include_router(listings_router)
 app.include_router(bookings_router)
 app.include_router(reviews_router)
+app.include_router(favorites_router)
 
 
 @app.get("/health", tags=["system"], summary="Health check")
