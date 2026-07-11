@@ -53,6 +53,9 @@ docker compose up --build
 | `SECRET_KEY` | (required) | JWT signing secret |
 | `DATABASE_URL` | `sqlite:////data/porchlight.db` | Set by compose; do not point at a new empty file |
 
-## Build contexts
+## Build notes
 
-Both Dockerfiles use the **repository root** as build context so the backend image can include `infra/data/porchlight.db` and the frontend can include `frontend/`.
+pnpm v11 blocks native build scripts unless explicitly allowed. The frontend
+[`pnpm-workspace.yaml`](../frontend/pnpm-workspace.yaml) sets
+`dangerouslyAllowAllBuilds: true` so `sharp` (required by Next.js) can install
+inside Docker. The Dockerfile copies this file into the install stage.
