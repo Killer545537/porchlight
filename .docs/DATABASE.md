@@ -56,6 +56,7 @@ erDiagram
         int guest_id FK
         date check_in
         date check_out
+        int guests
         float total_price
         datetime created_at
     }
@@ -91,8 +92,8 @@ erDiagram
 
 - **Cascade deletes flow from `Listing`.** Deleting a listing cascades to its `Photo`, `Booking`, `Review`, and `Favorite` rows (`cascade="all, delete-orphan"`). Simplest behavior for a demo; a production app would likely soft-delete or block deletion once bookings exist so trip/review history survives.
 - **Money is `float`, not `Decimal`/cents.** Acceptable for seeded demo data; would need fixed-point storage before handling real payments.
-- **Booking overlap isn't a DB constraint.** SQLite can't express exclusion constraints cleanly, so double-booking prevention happens in the service layer (`routers/bookings.py`, not yet built) via a query, not schema.
-- **No status/cancellation workflow.** `Booking` has no `status` column — create + list only. Add one if cancellation is needed.
+- **Booking overlap isn't a DB constraint.** SQLite can't express exclusion constraints cleanly, so double-booking prevention happens in `domain/booking/repository.py::has_overlap` (`existing.check_in < new.check_out AND existing.check_out > new.check_in`), called from `domain/booking/service.py` on both create and update — not as schema.
+- **No status/cancellation workflow.** `Booking` has no `status` column. Cancellation (`DELETE /bookings/{id}`) is a hard delete, not a state flag — there's no cancelled-booking history.
 - **Forward references across files use `TYPE_CHECKING`.** Each model file imports its sibling models only under `if TYPE_CHECKING:` and starts with `from __future__ import annotations`, so annotations can be written as bare names (`Mapped[list[Booking]]`, no quotes) while `ruff`/`ty` still resolve them. This isn't optional style — `User` and `Listing` (and others) reference each other bidirectionally, so a real top-level import on both sides deadlocks with `ImportError: cannot import name 'X' from partially initialized module` the moment either file loads. SQLAlchemy itself doesn't need the import at all; it resolves relationship targets by class name via its own mapper registry, not Python's import system — the `TYPE_CHECKING` import exists purely so static tools see a defined name.
 
 ## Verifying the schema

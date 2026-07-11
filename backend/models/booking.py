@@ -21,6 +21,7 @@ class Booking(Base):
     guest_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     check_in: Mapped[date] = mapped_column(Date)
     check_out: Mapped[date] = mapped_column(Date)
+    guests: Mapped[int]
     total_price: Mapped[float]
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 

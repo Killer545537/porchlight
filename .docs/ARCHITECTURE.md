@@ -49,7 +49,8 @@ backend/
 │   ├── errors.py             shared exceptions (NotFoundError, ForbiddenError, ConflictError,
 │   │                          AuthenticationError, BadRequestError) + register_exception_handlers
 │   ├── user/                 types.py, validation.py, repository.py, service.py
-│   └── listing/               types.py, validation.py, repository.py, service.py
+│   ├── listing/               types.py, validation.py, repository.py, service.py
+│   └── booking/                types.py, validation.py, repository.py, service.py
 ├── seed.py                  seed script (hosts, listings, photos, sample bookings) — not yet built
 ├── middleware/
 │   ├── __init__.py
@@ -58,7 +59,7 @@ backend/
 │   ├── users.py               signup/login/me
 │   ├── auth.py                 Google OAuth login + callback
 │   ├── listings.py            search/filter, CRUD (host-only write)
-│   ├── bookings.py            create with overlap check, my-trips — not yet built
+│   ├── bookings.py            create with overlap check, my trips, host dashboard
 │   └── uploads.py             image upload endpoint — not yet built
 └── static/uploads/            stored listing photos
 ```

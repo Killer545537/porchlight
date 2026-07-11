@@ -55,6 +55,7 @@ def demo() -> None:
             guest=guest,
             check_in=date(2026, 8, 1),
             check_out=date(2026, 8, 5),
+            guests=2,
             total_price=400.0,
         )
         review = Review(listing=listing, author=guest, rating=5, comment="Great stay")
