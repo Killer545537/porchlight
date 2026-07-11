@@ -1,0 +1,14 @@
+# Docker build context (repo root) — keep images lean.
+.git
+**/.next
+**/node_modules
+**/.venv
+**/__pycache__
+**/.ruff_cache
+**/.env
+**/.env.local
+.pnpm-store
+frontend/.next
+
+# Use infra/data/porchlight.db in images, not the live backend copy.
+backend/porchlight.db
