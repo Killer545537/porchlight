@@ -1,37 +1,93 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true
-  },
-  "files": {
-    "ignoreUnknown": true,
-    "includes": ["**", "!node_modules", "!.next", "!dist", "!build"]
-  },
-  "formatter": {
-    "enabled": true,
-    "indentStyle": "space",
-    "indentWidth": 2
-  },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true,
-      "suspicious": {
-        "noUnknownAtRules": "off"
-      }
+    "$schema": "https://biomejs.dev/schemas/2.4.13/schema.json",
+    "vcs": {
+        "clientKind": "git",
+        "enabled": true,
+        "useIgnoreFile": true
     },
-    "domains": {
-      "next": "recommended",
-      "react": "recommended"
-    }
-  },
-  "assist": {
-    "actions": {
-      "source": {
-        "organizeImports": "on"
-      }
-    }
-  }
+    "files": {
+        "ignoreUnknown": true,
+        "includes": ["**", "!node_modules", "!.next", "!dist", "!build", "!**/.docs"]
+    },
+    "assist": {
+        "actions": {
+            "source": {
+                "organizeImports": "on"
+            }
+        }
+    },
+    "css": {
+        "linter": {
+            "enabled": true
+        },
+        "parser": {
+            "tailwindDirectives": true
+        }
+    },
+    "formatter": {
+        "enabled": true,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineWidth": 100,
+        "lineEnding": "lf"
+    },
+    "javascript": {
+        "formatter": {
+            "jsxQuoteStyle": "single",
+            "quoteStyle": "single",
+            "semicolons": "always",
+            "trailingCommas": "all"
+        }
+    },
+    "linter": {
+        "domains": {
+            "next": "recommended",
+            "react": "recommended",
+            "drizzle": "recommended",
+            "project": "recommended",
+            "types": "recommended"
+        },
+        "enabled": true,
+        "rules": {
+            "recommended": true,
+            "a11y": {
+                "noSvgWithoutTitle": "off",
+                "noLabelWithoutControl": "off"
+            },
+            "complexity": {
+                "useArrowFunction": "warn"
+            },
+            "correctness": {
+                "useHookAtTopLevel": "off",
+                "noUnusedImports": "error",
+                "useImportExtensions": "off"
+            },
+            "nursery": {
+                "useExhaustiveSwitchCases": "error",
+                "noUnnecessaryConditions": "error",
+                "useArraySortCompare": "error"
+            },
+            "style": {
+                "noNonNullAssertion": "off",
+                "useImportType": "error"
+            },
+            "suspicious": {
+                "noArrayIndexKey": "off",
+                "noImplicitAnyLet": "off",
+                "noUnknownAtRules": "off"
+            }
+        }
+    },
+    "overrides": [
+        {
+            "includes": ["*.config.*", "*.setup.*"],
+            "linter": {
+                "rules": {
+                    "style": {
+                        "useImportType": "off"
+                    }
+                }
+            }
+        }
+    ]
 }
