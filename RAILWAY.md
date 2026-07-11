@@ -31,10 +31,12 @@ The image seeds `/data/porchlight.db` from `infra/data/porchlight.db` on first b
 4. Set variables:
 
 ```env
-NEXT_PUBLIC_API_URL=https://<backend-domain>
+BACKEND_URL=https://<backend-domain>
 ```
 
-Because `NEXT_PUBLIC_API_URL` is baked into the Next.js bundle at build time, redeploy the frontend after changing it.
+The frontend proxies browser API requests through `/api/backend/*`, so this value
+is read at runtime by the Next.js server. Do not set `NEXT_PUBLIC_API_URL` for
+the Railway frontend unless you intentionally want to bypass the proxy.
 
 ## After Both Domains Exist
 

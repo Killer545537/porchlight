@@ -1,10 +1,11 @@
 // Thin fetch wrapper around the Porchlight FastAPI backend.
 //
-// The backend runs separately (uvicorn, default :8000). Set NEXT_PUBLIC_API_URL
-// to point elsewhere; otherwise we assume localhost:8000.
+// In production, the browser talks to the same-origin Next.js proxy at
+// /api/backend so Railway runtime env can choose the real backend URL.
+// Set NEXT_PUBLIC_DIRECT_API_URL only when you intentionally want direct browser calls.
 
 export const API_BASE =
-    process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:8000';
+    process.env.NEXT_PUBLIC_DIRECT_API_URL?.replace(/\/$/, '') || '/api/backend';
 
 const TOKEN_KEY = 'porchlight.token';
 
