@@ -8,7 +8,7 @@ COPY backend/middleware ./middleware
 COPY backend/models ./models
 COPY backend/routers ./routers
 COPY backend/domain ./domain
-COPY backend/auth.py backend/config.py backend/database.py backend/main.py backend/scripts.py ./
+COPY backend/auth.py backend/config.py backend/database.py backend/main.py backend/scripts.py backend/seed.py ./
 
 RUN uv sync --frozen --no-dev
 

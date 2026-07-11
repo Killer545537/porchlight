@@ -18,6 +18,7 @@ import models  # noqa: F401  # registers tables
 from auth import hash_password
 from database import Base, SessionLocal, engine
 from models import Amenity, Booking, Favorite, Listing, Photo, Review, User
+from models.listing import listing_amenities
 
 PASSWORD = "porchlight"
 
@@ -212,6 +213,7 @@ def seed(force: bool) -> None:
             )
             return
         if force:
+            db.execute(listing_amenities.delete())
             for model in (Favorite, Review, Booking, Photo, Listing, User, Amenity):
                 db.query(model).delete()
             db.commit()
