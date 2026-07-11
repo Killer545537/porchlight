@@ -1,26 +1,182 @@
 @import "tailwindcss";
 
+/*
+  Porchlight design system — ported from the Claude Design compilation
+  (Porchlight.dc.html). Tokens are oklch, sharp corners (3px), Space Grotesk +
+  IBM Plex Mono. Light/dark are driven by [data-theme] on <html>.
+*/
+
+@theme {
+  /* Fonts — variables are injected by next/font in layout.tsx */
+  --font-sans: var(--font-space-grotesk), system-ui, sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+
+  /* Semantic colors resolve to the CSS variables set per-theme below, so
+     Tailwind utilities like bg-surface / text-ink pick up dark mode for free. */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface2: var(--surface2);
+  --color-ink: var(--ink);
+  --color-ink2: var(--ink2);
+  --color-ink3: var(--ink3);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-bad: var(--bad);
+  --color-good: var(--good);
+  --color-on-accent: oklch(0.22 0.03 60);
+
+  --radius-porch: var(--r);
+
+  --shadow-porch: var(--shadow);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: oklch(0.972 0.005 240);
+  --surface: oklch(0.995 0.002 240);
+  --surface2: oklch(0.941 0.007 240);
+  --ink: oklch(0.22 0.014 252);
+  --ink2: oklch(0.44 0.015 250);
+  --ink3: oklch(0.6 0.013 248);
+  --line: oklch(0.885 0.009 245);
+  --accent: oklch(0.72 0.13 65);
+  --accent-soft: color-mix(in oklab, var(--accent) 16%, transparent);
+  --bad: oklch(0.55 0.16 25);
+  --good: oklch(0.58 0.12 155);
+  --r: 3px;
+  --shadow: 0 14px 34px oklch(0.25 0.02 250 / 0.12);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+[data-theme="dark"] {
+  --bg: oklch(0.19 0.012 255);
+  --surface: oklch(0.225 0.013 255);
+  --surface2: oklch(0.275 0.013 255);
+  --ink: oklch(0.93 0.006 240);
+  --ink2: oklch(0.71 0.01 245);
+  --ink3: oklch(0.56 0.01 245);
+  --line: oklch(0.315 0.013 252);
+  --accent: oklch(0.78 0.125 70);
+  --accent-soft: color-mix(in oklab, var(--accent) 16%, transparent);
+  --shadow: 0 14px 34px oklch(0 0 0 / 0.45);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+* {
+  box-sizing: border-box;
+}
+
+/* Base element styles live in @layer base so Tailwind utilities (e.g.
+   `no-underline`, text colors) always win over them. Unlayered rules would
+   otherwise beat every utility, since unlayered CSS outranks any @layer. */
+@layer base {
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    /* Smooth the theme flip everywhere. */
+    transition:
+      background-color 0.22s ease,
+      color 0.22s ease;
+  }
+
+  /* Only real text links get an underline; Next <Link>s that wrap cards opt out
+     with the `no-underline` utility, which now correctly overrides this. */
+  a {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  a:hover {
+    color: var(--accent);
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: oklch(0.2 0.02 250);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Small helpers used across the app so components read like the design. */
+.mono {
+  font-family: var(--font-mono);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+/* Motion vocabulary lifted from the design compilation. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes panelIn {
+  from {
+    transform: translateX(56px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes toastIn {
+  from {
+    transform: translateY(14px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes drawCheck {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-rise {
+  animation: rise 0.4s ease both;
+}
+.animate-fade {
+  animation: fadeIn 0.22s ease both;
+}
+.animate-panel {
+  animation: panelIn 0.32s cubic-bezier(0.22, 0.8, 0.3, 1) both;
+}
+.animate-toast {
+  animation: toastIn 0.28s cubic-bezier(0.22, 0.8, 0.3, 1) both;
+}
+.animate-spin-slow {
+  animation: spin 0.85s linear infinite;
 }
