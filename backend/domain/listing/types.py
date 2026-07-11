@@ -102,9 +102,15 @@ class ListingOut(BaseModel):
     bedrooms: int
     bathrooms: int
     amenities: list[str]
+    photos: list[str]
     created_at: datetime
 
     @field_validator("amenities", mode="before")
     @classmethod
     def _amenity_names(cls, v: list) -> list[str]:
         return [a.name if hasattr(a, "name") else a for a in v]
+
+    @field_validator("photos", mode="before")
+    @classmethod
+    def _photo_urls(cls, v: list) -> list[str]:
+        return [p.url if hasattr(p, "url") else p for p in v]

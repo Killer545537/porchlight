@@ -53,7 +53,10 @@ backend/
 │   ├── booking/                types.py, validation.py, repository.py, service.py
 │   ├── review/                  types.py, repository.py, service.py — no validation.py;
 │   │                              rating/comment are plain Field() bounds, no cross-field rule
-│   └── favorite/                types.py, repository.py, service.py — no validation.py either
+│   ├── favorite/                types.py, repository.py, service.py — no validation.py either
+│   └── photo/                    types.py, repository.py, service.py, storage.py (plain
+│                                   save_upload/delete_upload functions, not a class — see
+│                                   Upgrade paths below)
 ├── seed.py                  seed script (hosts, listings, photos, sample bookings) — not yet built
 ├── middleware/
 │   ├── __init__.py
@@ -65,7 +68,7 @@ backend/
 │   ├── bookings.py            create with overlap check, my trips, host dashboard
 │   ├── reviews.py             leave/list/edit/delete — gated on a completed booking
 │   ├── favorites.py           wishlist — add/list/remove
-│   └── uploads.py             image upload endpoint — not yet built
+│   └── uploads.py             listing photo upload/delete, host-only
 └── static/uploads/            stored listing photos
 ```
 
@@ -131,5 +134,5 @@ No distributed tracing service (OpenTelemetry, Datadog, etc.) — single-process
 ## Upgrade paths (not built, noted for the record)
 
 - SQLite → Postgres: change `DATABASE_URL`, no ORM code changes needed.
-- Local uploads → S3/Cloudinary: swap the storage call in `routers/uploads.py` behind the same response shape.
+- Local uploads → S3/Cloudinary: swap `domain/photo/storage.py`'s `save_upload`/`delete_upload` bodies — same signatures (`UploadFile` in, URL string out / URL in, nothing out), nothing above the storage layer changes.
 - Stdout logs → APM: same log format works as input to any log shipper once traffic justifies it.

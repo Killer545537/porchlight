@@ -11,6 +11,7 @@ from routers.bookings import router as bookings_router
 from routers.favorites import router as favorites_router
 from routers.listings import router as listings_router
 from routers.reviews import router as reviews_router
+from routers.uploads import router as uploads_router
 from routers.users import router as users_router
 
 setup_logging()
@@ -47,6 +48,10 @@ app = FastAPI(
             "name": "favorites",
             "description": "A user's wishlist — add, list, and remove favorited listings.",
         },
+        {
+            "name": "uploads",
+            "description": "Listing photo upload/delete. Host-only, stored on local disk.",
+        },
     ],
 )
 
@@ -68,6 +73,7 @@ app.include_router(listings_router)
 app.include_router(bookings_router)
 app.include_router(reviews_router)
 app.include_router(favorites_router)
+app.include_router(uploads_router)
 
 
 @app.get("/health", tags=["system"], summary="Health check")

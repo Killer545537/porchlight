@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from domain.errors import ForbiddenError, NotFoundError
 from domain.listing.repository import ListingRepository
 from domain.listing.types import ListingCreate, ListingFilters, ListingUpdate
+from domain.photo import storage as photo_storage
 
 
 class ListingService:
@@ -46,6 +47,8 @@ class ListingService:
         listing = self.get_listing(listing_id)
         if listing.host_id != host_id:
             raise ForbiddenError("You do not own this listing")
+        for photo in listing.photos:
+            photo_storage.delete_upload(photo.url)
         self.repo.delete(listing)
         request_logger.info("listing deleted: id=%s", listing_id)
 
