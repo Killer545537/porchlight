@@ -50,7 +50,9 @@ backend/
 │   │                          AuthenticationError, BadRequestError) + register_exception_handlers
 │   ├── user/                 types.py, validation.py, repository.py, service.py
 │   ├── listing/               types.py, validation.py, repository.py, service.py
-│   └── booking/                types.py, validation.py, repository.py, service.py
+│   ├── booking/                types.py, validation.py, repository.py, service.py
+│   └── review/                  types.py, repository.py, service.py — no validation.py;
+│                                  rating/comment are plain Field() bounds, no cross-field rule
 ├── seed.py                  seed script (hosts, listings, photos, sample bookings) — not yet built
 ├── middleware/
 │   ├── __init__.py
@@ -60,6 +62,7 @@ backend/
 │   ├── auth.py                 Google OAuth login + callback
 │   ├── listings.py            search/filter, CRUD (host-only write)
 │   ├── bookings.py            create with overlap check, my trips, host dashboard
+│   ├── reviews.py             leave/list/edit/delete — gated on a completed booking
 │   └── uploads.py             image upload endpoint — not yet built
 └── static/uploads/            stored listing photos
 ```

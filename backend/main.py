@@ -9,6 +9,7 @@ from middleware.logging import RequestLogMiddleware, setup_logging
 from routers.auth import router as google_auth_router
 from routers.bookings import router as bookings_router
 from routers.listings import router as listings_router
+from routers.reviews import router as reviews_router
 from routers.users import router as users_router
 
 setup_logging()
@@ -37,6 +38,10 @@ app = FastAPI(
             "description": "Book a stay, view your trips or your listings' bookings, "
             "change or cancel a booking.",
         },
+        {
+            "name": "reviews",
+            "description": "Leave a review after a completed stay, list a listing's reviews.",
+        },
     ],
 )
 
@@ -56,6 +61,7 @@ app.include_router(users_router)
 app.include_router(google_auth_router)
 app.include_router(listings_router)
 app.include_router(bookings_router)
+app.include_router(reviews_router)
 
 
 @app.get("/health", tags=["system"], summary="Health check")
