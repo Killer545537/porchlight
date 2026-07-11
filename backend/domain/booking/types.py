@@ -40,6 +40,15 @@ class BookingUpdate(BaseModel):
         return self
 
 
+class BookingRangeOut(BaseModel):
+    check_in: date
+    check_out: date
+
+
+class ListingAvailabilityOut(BaseModel):
+    bookings: list[BookingRangeOut]
+
+
 class BookingOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -51,3 +60,4 @@ class BookingOut(BaseModel):
     guests: int
     total_price: float
     created_at: datetime
+    guest_name: str = ""

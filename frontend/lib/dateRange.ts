@@ -20,6 +20,46 @@ export function pickDate(range: DateRange, iso: string): DateRange {
     return { checkIn: iso, checkOut: null };
 }
 
+// Expand booking ranges into blocked night ISO strings (check_in inclusive, check_out exclusive).
+export function blockedNights(
+    bookings: { check_in: string; check_out: string }[],
+): Set<string> {
+    const blocked = new Set<string>();
+    for (const { check_in, check_out } of bookings) {
+        let d = parseISODate(check_in);
+        const end = parseISODate(check_out);
+        while (d.getTime() < end.getTime()) {
+            blocked.add(iso(d));
+            d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+        }
+    }
+    return blocked;
+}
+
+function rangeHasBlockedNight(checkIn: string, checkOut: string, blocked: Set<string>): boolean {
+    let d = parseISODate(checkIn);
+    const end = parseISODate(checkOut);
+    while (d.getTime() < end.getTime()) {
+        if (blocked.has(iso(d))) return true;
+        d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+    }
+    return false;
+}
+
+// Like pickDate, but rejects ranges that span a blocked night.
+export function pickDateAvoidingBlocked(
+    range: DateRange,
+    isoDay: string,
+    blocked: Set<string>,
+): DateRange {
+    if (blocked.has(isoDay)) return range;
+    const next = pickDate(range, isoDay);
+    if (next.checkIn && next.checkOut && rangeHasBlockedNight(next.checkIn, next.checkOut, blocked)) {
+        return { checkIn: isoDay, checkOut: null };
+    }
+    return next;
+}
+
 export function isInRange(iso: string, range: DateRange): boolean {
     if (!range.checkIn || !range.checkOut) return false;
     const t = parseISODate(iso).getTime();

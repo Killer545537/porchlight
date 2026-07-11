@@ -105,6 +105,8 @@ class ListingOut(BaseModel):
     amenities: list[str]
     photos: list[PhotoOut]
     created_at: datetime
+    avg_rating: float | None = None
+    review_count: int = 0
 
     @field_validator("amenities", mode="before")
     @classmethod

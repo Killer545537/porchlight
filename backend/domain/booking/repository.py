@@ -1,6 +1,6 @@
 from datetime import date
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from models import Booking, Listing
 
@@ -15,9 +15,13 @@ class BookingRepository:
     def list_for_guest(self, guest_id: int) -> list[Booking]:
         return self.db.query(Booking).filter(Booking.guest_id == guest_id).all()
 
+    def list_for_listing(self, listing_id: int) -> list[Booking]:
+        return self.db.query(Booking).filter(Booking.listing_id == listing_id).all()
+
     def list_for_host(self, host_id: int) -> list[Booking]:
         return (
             self.db.query(Booking)
+            .options(joinedload(Booking.guest))
             .join(Listing, Booking.listing_id == Listing.id)
             .filter(Listing.host_id == host_id)
             .all()

@@ -194,10 +194,7 @@ Base URL: `http://localhost:8000` — interactive docs at `/docs`.
 
 - **Payments** — checkout is mocked; no Stripe or real charges.
 - **Messaging, identity verification** — not implemented.
-- **Pagination** — listings load up to 100; no infinite scroll yet.
 - **Search dates** — collected in the UI but not used for availability filtering on the backend.
-- **Calendar blocked dates** — overlap is enforced at booking time; the calendar does not grey out booked dates.
-- **Host dashboard** — shows reservation counts, not per-booking guest detail UI.
 - **Superhost badges** — not implemented.
 
 ## Assumptions

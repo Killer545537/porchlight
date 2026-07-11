@@ -1,12 +1,12 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { ListingCard } from '@/components/ListingCard';
 import { MapView } from '@/components/MapView';
 import { SearchWidget } from '@/components/SearchWidget';
-import { CenterLoader, EmptyState } from '@/components/ui';
-import { useListings } from '@/lib/hooks';
+import { CenterLoader, EmptyState, Spinner } from '@/components/ui';
+import { useInfiniteListings, useListings } from '@/lib/hooks';
 import {
     citiesFrom,
     datesLabel,
@@ -46,6 +46,8 @@ function ExploreInner() {
     const [hovered, setHovered] = useState<number | null>(null);
     const [bbox, setBbox] = useState<BboxFilters | null>(null);
     const [isDesktop, setIsDesktop] = useState(false);
+    const [showBackToTop, setShowBackToTop] = useState(false);
+    const sentinelRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const mq = window.matchMedia('(min-width: 1024px)');
@@ -55,28 +57,54 @@ function ExploreInner() {
         return () => mq.removeEventListener('change', update);
     }, []);
 
+    useEffect(() => {
+        const onScroll = () => setShowBackToTop(window.scrollY > window.innerHeight * 2);
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
+
     // All listings power the destination + amenity option lists.
     const { data: allListings } = useListings({ limit: 100 });
 
     const price = PRICE_RANGES.find((p) => p.key === priceKey) ?? PRICE_RANGES[0];
     const mapActive = view === 'map';
     const bboxApplies = bbox && (isDesktop || mapActive);
-    const filters: ListingFilters = {
+    const filters: Omit<ListingFilters, 'offset' | 'limit'> = {
         city: search.city ?? undefined,
         max_guests: totalGuests(search) || undefined,
         min_price: price.min,
         max_price: price.max,
-        limit: 100,
         ...(bboxApplies ? bbox : {}),
     };
-    const { data: listings, isLoading } = useListings(filters);
+    const {
+        data,
+        isLoading,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+    } = useInfiniteListings(filters);
+
+    const listings = useMemo(() => data?.pages.flat() ?? [], [data]);
 
     // Amenities aren't a backend filter, so refine client-side.
     const results = useMemo(() => {
-        if (!listings) return [];
         if (amenities.size === 0) return listings;
         return listings.filter((l) => Array.from(amenities).every((a) => l.amenities.includes(a)));
     }, [listings, amenities]);
+
+    useEffect(() => {
+        const el = sentinelRef.current;
+        if (!el || !hasNextPage || isFetchingNextPage) return;
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0]?.isIntersecting) fetchNextPage();
+            },
+            { rootMargin: '200px' },
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
     const cities = citiesFrom(allListings);
     const amenityOptions = useMemo(
@@ -100,17 +128,24 @@ function ExploreInner() {
     };
 
     const listingGrid = (
-        <div className='grid grid-cols-[repeat(auto-fill,minmax(min(250px,100%),1fr))] gap-[18px] lg:grid-cols-1 lg:gap-3.5 xl:grid-cols-2'>
-            {results.map((listing) => (
-                <div
-                    key={listing.id}
-                    onMouseEnter={() => setHovered(listing.id)}
-                    onMouseLeave={() => setHovered(null)}
-                >
-                    <ListingCard listing={listing} highlighted={hovered === listing.id} />
+        <>
+            <div className='grid grid-cols-[repeat(auto-fill,minmax(min(250px,100%),1fr))] gap-[18px] lg:grid-cols-1 lg:gap-3.5 xl:grid-cols-2'>
+                {results.map((listing) => (
+                    <div
+                        key={listing.id}
+                        onMouseEnter={() => setHovered(listing.id)}
+                        onMouseLeave={() => setHovered(null)}
+                    >
+                        <ListingCard listing={listing} highlighted={hovered === listing.id} />
+                    </div>
+                ))}
+            </div>
+            {hasNextPage && (
+                <div ref={sentinelRef} className='flex justify-center py-8'>
+                    {isFetchingNextPage && <Spinner />}
                 </div>
-            ))}
-        </div>
+            )}
+        </>
     );
 
     const mapPanel = (
@@ -258,6 +293,17 @@ function ExploreInner() {
                     {/* Mobile: toggle between grid and map */}
                     <div className='lg:hidden'>{mapActive ? mapPanel : listingGrid}</div>
                 </>
+            )}
+
+            {showBackToTop && (
+                <button
+                    type='button'
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className='fixed bottom-6 right-6 z-50 rounded-full border border-line bg-surface px-4 py-2.5 shadow-porch transition-transform active:scale-95'
+                    style={{ font: '500 13px var(--font-sans)' }}
+                >
+                    ↑ Top
+                </button>
             )}
         </div>
     );

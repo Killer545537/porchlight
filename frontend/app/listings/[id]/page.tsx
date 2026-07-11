@@ -10,12 +10,13 @@ import { GalleryOverlay } from '@/components/GalleryOverlay';
 import { MapView } from '@/components/MapView';
 import { useToast } from '@/components/ToastProvider';
 import { CenterLoader, EmptyState, Stepper } from '@/components/ui';
-import { type DateRange, pickDate } from '@/lib/dateRange';
+import { type DateRange, blockedNights, pickDateAvoidingBlocked } from '@/lib/dateRange';
 import { formatPrice, formatShortDate, nightsBetween } from '@/lib/format';
 import {
     useAddFavorite,
     useFavorites,
     useListing,
+    useListingAvailability,
     useRemoveFavorite,
     useReviews,
 } from '@/lib/hooks';
@@ -30,6 +31,7 @@ export default function ListingPage() {
 
     const { data: listing, isLoading, isError } = useListing(Number.isFinite(id) ? id : null);
     const { data: reviews } = useReviews(Number.isFinite(id) ? id : null);
+    const { data: availability } = useListingAvailability(Number.isFinite(id) ? id : null);
     const { data: favorites } = useFavorites(isAuthed);
     const addFavorite = useAddFavorite();
     const removeFavorite = useRemoveFavorite();
@@ -46,6 +48,10 @@ export default function ListingPage() {
 
     const photos = useMemo(() => (listing ? listingPhotos(listing) : []), [listing]);
     const photoLabels = useMemo(() => photos.map((_, i) => `VIEW ${i + 1}`), [photos]);
+    const blocked = useMemo(
+        () => blockedNights(availability?.bookings ?? []),
+        [availability],
+    );
 
     if (isLoading) return <CenterLoader />;
     if (isError || !listing) {
@@ -346,7 +352,10 @@ export default function ListingPage() {
                                 monthDate={month}
                                 onMonthChange={setMonth}
                                 range={range}
-                                onPickDay={(iso) => setRange((r) => pickDate(r, iso))}
+                                blocked={blocked}
+                                onPickDay={(isoDay) =>
+                                    setRange((r) => pickDateAvoidingBlocked(r, isoDay, blocked))
+                                }
                             />
                             <div className='mt-2 flex items-center justify-between'>
                                 <span className='mono text-[10px] text-ink3'>

@@ -55,7 +55,16 @@ class BookingService:
         return self.repo.list_for_guest(guest_id)
 
     def list_hosting(self, host_id: int) -> list[Booking]:
-        return self.repo.list_for_host(host_id)
+        bookings = self.repo.list_for_host(host_id)
+        for b in bookings:
+            b.guest_name = b.guest.name
+        return bookings
+
+    def list_availability(self, listing_id: int) -> list[Booking]:
+        listing = self.listing_repo.get_by_id(listing_id)
+        if listing is None:
+            raise NotFoundError(f"Listing {listing_id} not found")
+        return self.repo.list_for_listing(listing_id)
 
     def update_booking(
         self, booking_id: int, guest_id: int, data: BookingUpdate

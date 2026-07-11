@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 
 from auth import get_current_user
 from database import get_db
+from domain.booking.service import BookingService
+from domain.booking.types import BookingRangeOut, ListingAvailabilityOut
 from domain.listing.service import ListingService
 from domain.listing.types import ListingCreate, ListingFilters, ListingOut, ListingUpdate
 from models import Listing, User
@@ -50,6 +52,24 @@ def list_listings(
 )
 def get_listing(listing_id: int, db: Session = Depends(get_db)) -> Listing:
     return ListingService(db).get_listing(listing_id)
+
+
+@router.get(
+    "/{listing_id}/availability",
+    response_model=ListingAvailabilityOut,
+    summary="List booked date ranges for a listing",
+    description="Public — no auth required. Returns check_in/check_out for each booking.",
+    responses={404: {"description": "No listing with that ID"}},
+)
+def get_listing_availability(
+    listing_id: int, db: Session = Depends(get_db)
+) -> ListingAvailabilityOut:
+    bookings = BookingService(db).list_availability(listing_id)
+    return ListingAvailabilityOut(
+        bookings=[
+            BookingRangeOut(check_in=b.check_in, check_out=b.check_out) for b in bookings
+        ]
+    )
 
 
 @router.patch(

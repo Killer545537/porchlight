@@ -1,10 +1,11 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch, setToken } from './api';
 import type {
     Booking,
     BookingCreate,
     BookingUpdate,
     Listing,
+    ListingAvailability,
     ListingCreate,
     ListingFilters,
     ListingUpdate,
@@ -15,10 +16,14 @@ import type {
     User,
 } from './types';
 
+const INFINITE_PAGE_SIZE = 20;
+
 export const queryKeys = {
     me: ['me'] as const,
     listings: (filters: ListingFilters) => ['listings', filters] as const,
+    infiniteListings: (filters: ListingFilters) => ['listings', 'infinite', filters] as const,
     listing: (id: number) => ['listing', id] as const,
+    availability: (listingId: number) => ['availability', listingId] as const,
     reviews: (listingId: number) => ['reviews', listingId] as const,
     trips: ['trips'] as const,
     hosting: ['hosting'] as const,
@@ -75,6 +80,24 @@ export function useListings(filters: ListingFilters = {}) {
             apiFetch<Listing[]>('/listings', {
                 query: filters as Record<string, string | number | undefined>,
             }),
+        placeholderData: keepPreviousData,
+    });
+}
+
+export function useInfiniteListings(filters: Omit<ListingFilters, 'offset' | 'limit'> = {}) {
+    const pageFilters = { ...filters, limit: INFINITE_PAGE_SIZE };
+    return useInfiniteQuery({
+        queryKey: queryKeys.infiniteListings(pageFilters),
+        queryFn: ({ pageParam }) =>
+            apiFetch<Listing[]>('/listings', {
+                query: {
+                    ...pageFilters,
+                    offset: pageParam,
+                } as Record<string, string | number | undefined>,
+            }),
+        initialPageParam: 0,
+        getNextPageParam: (lastPage, allPages) =>
+            lastPage.length === INFINITE_PAGE_SIZE ? allPages.length * INFINITE_PAGE_SIZE : undefined,
         placeholderData: keepPreviousData,
     });
 }
@@ -156,8 +179,10 @@ export function useCreateBooking() {
                 body: payload,
                 auth: true,
             }),
-        onSuccess: () => {
+        onSuccess: (_booking, payload) => {
             qc.invalidateQueries({ queryKey: queryKeys.trips });
+            qc.invalidateQueries({ queryKey: queryKeys.hosting });
+            qc.invalidateQueries({ queryKey: queryKeys.availability(payload.listing_id) });
         },
     });
 }
@@ -189,6 +214,14 @@ export function useCancelBooking() {
 }
 
 /* -------------------------------- reviews -------------------------------- */
+
+export function useListingAvailability(listingId: number | null) {
+    return useQuery({
+        queryKey: queryKeys.availability(listingId ?? -1),
+        queryFn: () => apiFetch<ListingAvailability>(`/listings/${listingId}/availability`),
+        enabled: listingId !== null,
+    });
+}
 
 export function useReviews(listingId: number | null) {
     return useQuery({

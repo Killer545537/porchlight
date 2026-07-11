@@ -6,27 +6,45 @@ import { useAuth } from '@/components/AuthProvider';
 import { HostListingForm } from '@/components/HostListingForm';
 import { RequireAuth } from '@/components/RequireAuth';
 import { useToast } from '@/components/ToastProvider';
-import { CenterLoader, EmptyState } from '@/components/ui';
+import { CenterLoader, EmptyState, Kicker } from '@/components/ui';
 import { ApiError } from '@/lib/api';
-import { formatPrice } from '@/lib/format';
+import { formatDateRange, formatPrice, isPast } from '@/lib/format';
 import { useDeleteListing, useHostingBookings, useListings } from '@/lib/hooks';
 import { coverPhoto } from '@/lib/photo';
-import type { Listing } from '@/lib/types';
+import type { Booking, Listing } from '@/lib/types';
 
 function HostInner() {
     const { user } = useAuth();
     const { data: allListings, isLoading } = useListings({ limit: 100 });
-    const { data: hostingBookings } = useHostingBookings();
+    const { data: hostingBookings, isLoading: bookingsLoading } = useHostingBookings();
 
     const myListings = useMemo(
         () => (allListings ?? []).filter((l) => l.host_id === user?.id),
         [allListings, user?.id],
     );
 
+    const bookingsByListing = useMemo(() => {
+        const map = new Map<number, Booking[]>();
+        for (const b of hostingBookings ?? []) {
+            const arr = map.get(b.listing_id) ?? [];
+            arr.push(b);
+            map.set(b.listing_id, arr);
+        }
+        for (const arr of map.values()) {
+            arr.sort((a, b) => a.check_in.localeCompare(b.check_in));
+        }
+        return map;
+    }, [hostingBookings]);
+
+    const upcomingCount = useMemo(
+        () => (hostingBookings ?? []).filter((b) => !isPast(b.check_out)).length,
+        [hostingBookings],
+    );
+
     const [creating, setCreating] = useState(false);
     const [editing, setEditing] = useState<Listing | null>(null);
 
-    if (isLoading) return <CenterLoader />;
+    if (isLoading || bookingsLoading) return <CenterLoader />;
 
     const reservationCount = hostingBookings?.length ?? 0;
 
@@ -46,6 +64,12 @@ function HostInner() {
                     <div className='mono text-[11px] tracking-[0.14em] text-ink3'>
                         {myListings.length} {myListings.length === 1 ? 'LISTING' : 'LISTINGS'} ·{' '}
                         {reservationCount} {reservationCount === 1 ? 'RESERVATION' : 'RESERVATIONS'}
+                        {upcomingCount > 0 && (
+                            <>
+                                {' '}
+                                · {upcomingCount} UPCOMING
+                            </>
+                        )}
                     </div>
                 </div>
                 {!creating && !editing && (
@@ -84,10 +108,7 @@ function HostInner() {
                         <HostListingRow
                             key={listing.id}
                             listing={listing}
-                            reservations={
-                                hostingBookings?.filter((b) => b.listing_id === listing.id)
-                                    .length ?? 0
-                            }
+                            bookings={bookingsByListing.get(listing.id) ?? []}
                             onEdit={() => {
                                 setCreating(false);
                                 setEditing(listing);
@@ -102,11 +123,11 @@ function HostInner() {
 
 function HostListingRow({
     listing,
-    reservations,
+    bookings,
     onEdit,
 }: {
     listing: Listing;
-    reservations: number;
+    bookings: Booking[];
     onEdit: () => void;
 }) {
     const del = useDeleteListing();
@@ -114,101 +135,128 @@ function HostListingRow({
     const [confirming, setConfirming] = useState(false);
 
     return (
-        <div className='flex flex-wrap overflow-hidden rounded-porch border border-line bg-surface'>
-            <Link
-                href={`/listings/${listing.id}`}
-                className='relative min-h-[104px] flex-[0_0_clamp(96px,16vw,150px)]'
-            >
-                <div
-                    className='absolute inset-0'
-                    style={{ background: coverPhoto(listing).background }}
-                />
-            </Link>
-            <div className='flex min-w-[min(100%,220px)] flex-1 flex-wrap items-center justify-between gap-3 p-4'>
-                <div className='min-w-0'>
+        <div className='overflow-hidden rounded-porch border border-line bg-surface'>
+            <div className='flex flex-wrap'>
+                <Link
+                    href={`/listings/${listing.id}`}
+                    className='relative min-h-[104px] flex-[0_0_clamp(96px,16vw,150px)]'
+                >
                     <div
-                        style={{
-                            font: '600 16px var(--font-sans)',
-                            letterSpacing: '-0.01em',
-                        }}
-                    >
-                        {listing.title}
+                        className='absolute inset-0'
+                        style={{ background: coverPhoto(listing).background }}
+                    />
+                </Link>
+                <div className='flex min-w-[min(100%,220px)] flex-1 flex-wrap items-center justify-between gap-3 p-4'>
+                    <div className='min-w-0'>
+                        <div
+                            style={{
+                                font: '600 16px var(--font-sans)',
+                                letterSpacing: '-0.01em',
+                            }}
+                        >
+                            {listing.title}
+                        </div>
+                        <div
+                            className='mt-0.5 text-[13px] text-ink3'
+                            style={{ fontFamily: 'var(--font-sans)' }}
+                        >
+                            {listing.city}, {listing.country} · {formatPrice(listing.price_per_night)}
+                            /night
+                        </div>
+                        <div
+                            className='mono mt-1.5 text-[10.5px] tracking-[0.1em]'
+                            style={{ color: 'var(--good)' }}
+                        >
+                            LISTED · {bookings.length}{' '}
+                            {bookings.length === 1 ? 'RESERVATION' : 'RESERVATIONS'}
+                        </div>
                     </div>
-                    <div
-                        className='mt-0.5 text-[13px] text-ink3'
-                        style={{ fontFamily: 'var(--font-sans)' }}
-                    >
-                        {listing.city}, {listing.country} · {formatPrice(listing.price_per_night)}
-                        /night
-                    </div>
-                    <div
-                        className='mono mt-1.5 text-[10.5px] tracking-[0.1em]'
-                        style={{ color: 'var(--good)' }}
-                    >
-                        LISTED · {reservations}{' '}
-                        {reservations === 1 ? 'RESERVATION' : 'RESERVATIONS'}
-                    </div>
-                </div>
-                <div className='flex items-center gap-2'>
-                    {confirming ? (
-                        <>
-                            <span
-                                className='text-ink2'
-                                style={{ font: '500 12.5px var(--font-sans)' }}
-                            >
-                                Delete this listing?
-                            </span>
-                            <button
-                                type='button'
-                                onClick={() =>
-                                    del.mutate(listing.id, {
-                                        onSuccess: () => toast('Listing deleted'),
-                                        onError: (e) =>
-                                            toast(
-                                                e instanceof ApiError
-                                                    ? e.message
-                                                    : "Couldn't delete",
-                                            ),
+                    <div className='flex items-center gap-2'>
+                        {confirming ? (
+                            <>
+                                <span
+                                    className='text-ink2'
+                                    style={{ font: '500 12.5px var(--font-sans)' }}
+                                >
+                                    Delete this listing?
+                                </span>
+                                <button
+                                    type='button'
+                                    onClick={() =>
+                                        del.mutate(listing.id, {
+                                            onSuccess: () => toast('Listing deleted'),
+                                            onError: (e) =>
+                                                toast(
+                                                    e instanceof ApiError
+                                                        ? e.message
+                                                        : "Couldn't delete",
+                                                ),
                                     })
-                                }
-                                className='rounded-porch px-3.5 py-2.5 text-white transition-transform active:scale-95'
-                                style={{
-                                    background: 'var(--bad)',
-                                    font: '600 12.5px var(--font-sans)',
-                                }}
-                            >
-                                Delete
-                            </button>
-                            <button
-                                type='button'
-                                onClick={() => setConfirming(false)}
-                                className='rounded-porch border border-line px-3.5 py-2.5 text-ink'
-                                style={{ font: '500 12.5px var(--font-sans)' }}
-                            >
-                                Keep
-                            </button>
-                        </>
-                    ) : (
-                        <>
-                            <button
-                                type='button'
-                                onClick={onEdit}
-                                className='rounded-porch border border-line px-3.5 py-2.5 text-ink transition-colors hover:border-ink3'
-                                style={{ font: '500 12.5px var(--font-sans)' }}
-                            >
-                                Edit
-                            </button>
-                            <button
-                                type='button'
-                                onClick={() => setConfirming(true)}
-                                className='rounded-porch border border-line px-3.5 py-2.5 text-ink2 transition-colors hover:text-bad'
-                                style={{ font: '500 12.5px var(--font-sans)' }}
-                            >
-                                Delete
-                            </button>
-                        </>
-                    )}
+                                    }
+                                    className='rounded-porch px-3.5 py-2.5 text-white transition-transform active:scale-95'
+                                    style={{
+                                        background: 'var(--bad)',
+                                        font: '600 12.5px var(--font-sans)',
+                                    }}
+                                >
+                                    Delete
+                                </button>
+                                <button
+                                    type='button'
+                                    onClick={() => setConfirming(false)}
+                                    className='rounded-porch border border-line px-3.5 py-2.5 text-ink'
+                                    style={{ font: '500 12.5px var(--font-sans)' }}
+                                >
+                                    Keep
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <button
+                                    type='button'
+                                    onClick={onEdit}
+                                    className='rounded-porch border border-line px-3.5 py-2.5 text-ink transition-colors hover:border-ink3'
+                                    style={{ font: '500 12.5px var(--font-sans)' }}
+                                >
+                                    Edit
+                                </button>
+                                <button
+                                    type='button'
+                                    onClick={() => setConfirming(true)}
+                                    className='rounded-porch border border-line px-3.5 py-2.5 text-ink2 transition-colors hover:text-bad'
+                                    style={{ font: '500 12.5px var(--font-sans)' }}
+                                >
+                                    Delete
+                                </button>
+                            </>
+                        )}
+                    </div>
                 </div>
+            </div>
+
+            {bookings.length > 0 && (
+                <div className='border-t border-line'>
+                    {bookings.map((booking) => (
+                        <HostBookingCard key={booking.id} booking={booking} />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+function HostBookingCard({ booking }: { booking: Booking }) {
+    const past = isPast(booking.check_out);
+
+    return (
+        <div className='border-t border-dashed border-line px-4 py-3 first:border-t-0'>
+            <Kicker>{past ? 'PAST' : 'UPCOMING'}</Kicker>
+            <div className='mono mt-1.5 text-[12px] text-ink2'>
+                {formatDateRange(booking.check_in, booking.check_out)} · {booking.guests}{' '}
+                {booking.guests === 1 ? 'guest' : 'guests'}
+            </div>
+            <div className='mt-0.5 text-[13px] text-ink3' style={{ fontFamily: 'var(--font-sans)' }}>
+                {booking.guest_name}
             </div>
         </div>
     );

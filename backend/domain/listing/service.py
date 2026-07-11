@@ -18,14 +18,22 @@ class ListingService:
         request_logger.info("listing created: id=%s host_id=%s", listing.id, host_id)
         return listing
 
+    def _enrich_review_stats(self, listings: list[Listing]) -> list[Listing]:
+        stats = self.repo.get_review_stats([listing.id for listing in listings])
+        for listing in listings:
+            avg, count = stats.get(listing.id, (None, 0))
+            setattr(listing, "avg_rating", avg)
+            setattr(listing, "review_count", count)
+        return listings
+
     def get_listing(self, listing_id: int) -> Listing:
         listing = self.repo.get_by_id(listing_id)
         if listing is None:
             raise NotFoundError(f"Listing {listing_id} not found")
-        return listing
+        return self._enrich_review_stats([listing])[0]
 
     def list_listings(self, filters: ListingFilters) -> list[Listing]:
-        return self.repo.list_all(filters)
+        return self._enrich_review_stats(self.repo.list_all(filters))
 
     def update_listing(
         self, listing_id: int, host_id: int, data: ListingUpdate

@@ -29,6 +29,8 @@ export interface Listing {
     amenities: string[];
     photos: Photo[];
     created_at: string;
+    avg_rating: number | null;
+    review_count: number;
 }
 
 export interface ListingCreate {
@@ -69,6 +71,7 @@ export interface Booking {
     guests: number;
     total_price: number;
     created_at: string;
+    guest_name: string;
 }
 
 export interface BookingCreate {
@@ -103,4 +106,8 @@ export interface Photo {
     listing_id: number;
     url: string;
     created_at: string;
+}
+
+export interface ListingAvailability {
+    bookings: { check_in: string; check_out: string }[];
 }

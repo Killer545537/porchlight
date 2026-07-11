@@ -1,7 +1,8 @@
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from domain.listing.types import ListingCreate, ListingFilters, ListingUpdate
-from models import Amenity, Listing
+from models import Amenity, Listing, Review
 
 
 class ListingRepository:
@@ -10,6 +11,26 @@ class ListingRepository:
 
     def get_by_id(self, listing_id: int) -> Listing | None:
         return self.db.get(Listing, listing_id)
+
+    def get_review_stats(
+        self, listing_ids: list[int]
+    ) -> dict[int, tuple[float | None, int]]:
+        if not listing_ids:
+            return {}
+        rows = (
+            self.db.query(
+                Review.listing_id,
+                func.avg(Review.rating),
+                func.count(Review.id),
+            )
+            .filter(Review.listing_id.in_(listing_ids))
+            .group_by(Review.listing_id)
+            .all()
+        )
+        return {
+            listing_id: (float(avg) if avg is not None else None, count)
+            for listing_id, avg, count in rows
+        }
 
     def list_all(self, filters: ListingFilters) -> list[Listing]:
         query = self.db.query(Listing)
@@ -29,7 +50,7 @@ class ListingRepository:
             query = query.filter(Listing.longitude >= filters.min_longitude)
         if filters.max_longitude is not None:
             query = query.filter(Listing.longitude <= filters.max_longitude)
-        return query.offset(filters.offset).limit(filters.limit).all()
+        return query.order_by(Listing.id).offset(filters.offset).limit(filters.limit).all()
 
     def get_or_create_amenities(self, names: list[str]) -> list[Amenity]:
         amenities = []
