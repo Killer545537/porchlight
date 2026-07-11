@@ -19,7 +19,15 @@ def validate_bounds(
     min_longitude: float | None,
     max_longitude: float | None,
 ) -> None:
-    if min_latitude is not None and max_latitude is not None and min_latitude > max_latitude:
+    if (
+        min_latitude is not None
+        and max_latitude is not None
+        and min_latitude > max_latitude
+    ):
         raise ValueError("min_latitude must be <= max_latitude")
-    if min_longitude is not None and max_longitude is not None and min_longitude > max_longitude:
+    if (
+        min_longitude is not None
+        and max_longitude is not None
+        and min_longitude > max_longitude
+    ):
         raise ValueError("min_longitude must be <= max_longitude")

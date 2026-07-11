@@ -1,6 +1,5 @@
 import type { Map as MapLibreMap } from 'maplibre-gl';
-import type { ListingFilters } from './types';
-import type { Listing } from './types';
+import type { Listing, ListingFilters } from './types';
 
 /** Default center — California coast, near seeded listings. */
 export const defaultCenter: [number, number] = [-121.5, 37.5];

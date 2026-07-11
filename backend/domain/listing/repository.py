@@ -50,7 +50,9 @@ class ListingRepository:
             query = query.filter(Listing.longitude >= filters.min_longitude)
         if filters.max_longitude is not None:
             query = query.filter(Listing.longitude <= filters.max_longitude)
-        return query.order_by(Listing.id).offset(filters.offset).limit(filters.limit).all()
+        return (
+            query.order_by(Listing.id).offset(filters.offset).limit(filters.limit).all()
+        )
 
     def get_or_create_amenities(self, names: list[str]) -> list[Amenity]:
         amenities = []

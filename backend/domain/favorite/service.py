@@ -20,7 +20,9 @@ class FavoriteService:
             raise ConflictError("Already favorited")
 
         self.repo.create(user_id, listing_id)
-        request_logger.info("favorite added: user_id=%s listing_id=%s", user_id, listing_id)
+        request_logger.info(
+            "favorite added: user_id=%s listing_id=%s", user_id, listing_id
+        )
         return listing
 
     def list_favorites(self, user_id: int) -> list[Listing]:
@@ -31,4 +33,6 @@ class FavoriteService:
         if favorite is None:
             raise NotFoundError("Not favorited")
         self.repo.delete(favorite)
-        request_logger.info("favorite removed: user_id=%s listing_id=%s", user_id, listing_id)
+        request_logger.info(
+            "favorite removed: user_id=%s listing_id=%s", user_id, listing_id
+        )

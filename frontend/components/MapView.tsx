@@ -3,7 +3,13 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef } from 'react';
 import { useTheme } from '@/components/ThemeProvider';
-import { Map, MapControls, MapMarker, MarkerContent, useMap } from '@/components/ui/map';
+import {
+    Map as MapCanvas,
+    MapControls,
+    MapMarker,
+    MarkerContent,
+    useMap,
+} from '@/components/ui/map';
 import { formatPrice } from '@/lib/format';
 import {
     bboxFromMap,
@@ -47,7 +53,7 @@ export function MapView({
         <div
             className={`relative overflow-hidden rounded-porch border border-line bg-surface2 ${heightClass} ${className ?? ''}`}
         >
-            <Map
+            <MapCanvas
                 theme={theme}
                 center={listings.length > 0 ? center : defaultCenter}
                 zoom={initialZoom}
@@ -91,7 +97,7 @@ export function MapView({
                     showLocate={false}
                     showFullscreen={false}
                 />
-            </Map>
+            </MapCanvas>
         </div>
     );
 }

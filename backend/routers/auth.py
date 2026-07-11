@@ -37,4 +37,6 @@ def google_login() -> RedirectResponse:
 )
 def google_callback(code: str, db: Session = Depends(get_db)) -> RedirectResponse:
     token = UserService(db).google_callback(code)
-    return RedirectResponse(f"{settings.frontend_url}/auth/callback?token={token.access_token}")
+    return RedirectResponse(
+        f"{settings.frontend_url}/auth/callback?token={token.access_token}"
+    )

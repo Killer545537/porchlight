@@ -11,7 +11,9 @@ class ReviewRepository:
     def get_by_id(self, review_id: int) -> Review | None:
         return self.db.get(Review, review_id)
 
-    def get_by_listing_and_author(self, listing_id: int, author_id: int) -> Review | None:
+    def get_by_listing_and_author(
+        self, listing_id: int, author_id: int
+    ) -> Review | None:
         return (
             self.db.query(Review)
             .filter(Review.listing_id == listing_id, Review.author_id == author_id)
@@ -23,7 +25,10 @@ class ReviewRepository:
 
     def create(self, listing_id: int, author_id: int, data: ReviewCreate) -> Review:
         review = Review(
-            listing_id=listing_id, author_id=author_id, rating=data.rating, comment=data.comment
+            listing_id=listing_id,
+            author_id=author_id,
+            rating=data.rating,
+            comment=data.comment,
         )
         self.db.add(review)
         self.db.commit()

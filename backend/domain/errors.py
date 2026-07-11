@@ -41,7 +41,9 @@ def _make_handler(status_code: int):
     def handler(request: Request, exc: Exception) -> JSONResponse:
         message = exc.message if isinstance(exc, DomainError) else str(exc)
         headers = {"WWW-Authenticate": "Bearer"} if status_code == 401 else None
-        return JSONResponse(status_code=status_code, content={"detail": message}, headers=headers)
+        return JSONResponse(
+            status_code=status_code, content={"detail": message}, headers=headers
+        )
 
     return handler
 

@@ -5,7 +5,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class ReviewCreate(BaseModel):
     model_config = ConfigDict(
-        json_schema_extra={"example": {"rating": 5, "comment": "Great stay, would book again."}}
+        json_schema_extra={
+            "example": {"rating": 5, "comment": "Great stay, would book again."}
+        }
     )
 
     rating: int = Field(ge=1, le=5)

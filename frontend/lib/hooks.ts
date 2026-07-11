@@ -1,4 +1,10 @@
-import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+    keepPreviousData,
+    useInfiniteQuery,
+    useMutation,
+    useQuery,
+    useQueryClient,
+} from '@tanstack/react-query';
 import { apiFetch, setToken } from './api';
 import type {
     Booking,
@@ -97,7 +103,9 @@ export function useInfiniteListings(filters: Omit<ListingFilters, 'offset' | 'li
             }),
         initialPageParam: 0,
         getNextPageParam: (lastPage, allPages) =>
-            lastPage.length === INFINITE_PAGE_SIZE ? allPages.length * INFINITE_PAGE_SIZE : undefined,
+            lastPage.length === INFINITE_PAGE_SIZE
+                ? allPages.length * INFINITE_PAGE_SIZE
+                : undefined,
         placeholderData: keepPreviousData,
     });
 }

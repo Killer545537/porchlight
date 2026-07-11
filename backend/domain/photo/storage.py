@@ -25,7 +25,9 @@ def save_upload(file: UploadFile) -> str:
 
     contents = file.file.read()
     if len(contents) > MAX_UPLOAD_BYTES:
-        raise BadRequestError(f"File too large — max {MAX_UPLOAD_BYTES // (1024 * 1024)}MB")
+        raise BadRequestError(
+            f"File too large — max {MAX_UPLOAD_BYTES // (1024 * 1024)}MB"
+        )
 
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     filename = f"{uuid.uuid4().hex}{extension}"

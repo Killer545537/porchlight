@@ -21,7 +21,9 @@ class BookingService:
         if listing.host_id == guest_id:
             raise BadRequestError("You can't book your own listing")
         if data.guests > listing.max_guests:
-            raise BadRequestError(f"This listing sleeps at most {listing.max_guests} guests")
+            raise BadRequestError(
+                f"This listing sleeps at most {listing.max_guests} guests"
+            )
         if self.repo.has_overlap(data.listing_id, data.check_in, data.check_out):
             raise ConflictError("Those dates are no longer available")
 
@@ -76,15 +78,22 @@ class BookingService:
             raise ForbiddenError("You do not own this booking")
 
         new_check_in = data.check_in if data.check_in is not None else booking.check_in
-        new_check_out = data.check_out if data.check_out is not None else booking.check_out
+        new_check_out = (
+            data.check_out if data.check_out is not None else booking.check_out
+        )
         new_guests = data.guests if data.guests is not None else booking.guests
         validate_date_range(new_check_in, new_check_out)
 
         listing = booking.listing
         if new_guests > listing.max_guests:
-            raise BadRequestError(f"This listing sleeps at most {listing.max_guests} guests")
+            raise BadRequestError(
+                f"This listing sleeps at most {listing.max_guests} guests"
+            )
         if self.repo.has_overlap(
-            booking.listing_id, new_check_in, new_check_out, exclude_booking_id=booking.id
+            booking.listing_id,
+            new_check_in,
+            new_check_out,
+            exclude_booking_id=booking.id,
         ):
             raise ConflictError("Those dates are no longer available")
 

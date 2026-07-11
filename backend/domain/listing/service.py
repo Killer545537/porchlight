@@ -100,7 +100,10 @@ def demo() -> None:
         assert len(service.list_listings(ListingFilters(city="Tahoe"))) == 1
 
         in_bounds = ListingFilters(
-            min_latitude=38.0, max_latitude=40.0, min_longitude=-121.0, max_longitude=-119.0
+            min_latitude=38.0,
+            max_latitude=40.0,
+            min_longitude=-121.0,
+            max_longitude=-119.0,
         )
         assert len(service.list_listings(in_bounds)) == 1
 

@@ -160,14 +160,14 @@
 
     /* MapCN / MapLibre popup chrome reset */
     .maplibregl-popup-content {
-        background: transparent !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-        border-radius: 0 !important;
+        background: transparent;
+        box-shadow: none;
+        padding: 0;
+        border-radius: 0;
         @apply bg-transparent! shadow-none! p-0! rounded-none!;
     }
     .maplibregl-popup-tip {
-        display: none !important;
+        display: none;
         @apply hidden!;
     }
 

@@ -9,7 +9,17 @@ import type { Listing } from '@/lib/types';
 import { useAuth } from './AuthProvider';
 import { useToast } from './ToastProvider';
 
-export function ListingCard({ listing, highlighted }: { listing: Listing; highlighted?: boolean }) {
+export function ListingCard({
+    listing,
+    highlighted,
+    onMouseEnter,
+    onMouseLeave,
+}: {
+    listing: Listing;
+    highlighted?: boolean;
+    onMouseEnter?: () => void;
+    onMouseLeave?: () => void;
+}) {
     const router = useRouter();
     const { isAuthed } = useAuth();
     const { toast } = useToast();
@@ -45,6 +55,8 @@ export function ListingCard({ listing, highlighted }: { listing: Listing; highli
             className={`group block overflow-hidden rounded-porch border bg-surface no-underline transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-[3px] hover:shadow-porch ${
                 highlighted ? 'border-ink shadow-porch' : 'border-line'
             }`}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
         >
             <div className='relative aspect-[4/3] overflow-hidden bg-surface2'>
                 <div className='absolute inset-0' style={{ background: photo.background }} />
@@ -86,7 +98,10 @@ export function ListingCard({ listing, highlighted }: { listing: Listing; highli
                     </div>
                 </div>
                 <div className='flex items-baseline justify-between gap-2.5'>
-                    <div className='text-[13px] text-ink3' style={{ fontFamily: 'var(--font-sans)' }}>
+                    <div
+                        className='text-[13px] text-ink3'
+                        style={{ fontFamily: 'var(--font-sans)' }}
+                    >
                         {listing.city}, {listing.country}
                     </div>
                     <div className='mono flex-none text-[12px] text-ink2'>

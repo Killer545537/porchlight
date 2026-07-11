@@ -32,7 +32,14 @@ LISTINGS = [
         "guests": 6,
         "bedrooms": 3,
         "bathrooms": 2,
-        "amenities": ["wifi", "kitchen", "fireplace", "free parking", "hot tub", "workspace"],
+        "amenities": [
+            "wifi",
+            "kitchen",
+            "fireplace",
+            "free parking",
+            "hot tub",
+            "workspace",
+        ],
         "description": (
             "A low concrete-and-glass house set into the cliff above a private cove. "
             "Whale spouts from the kitchen sink, fog rolling in by four, and a wood stove "
@@ -40,7 +47,11 @@ LISTINGS = [
             "minutes and is worth every one."
         ),
         "reviews": [
-            ("Priya", 5, "The fog show alone is worth it. Spotless, warm, quieter than seems possible."),
+            (
+                "Priya",
+                5,
+                "The fog show alone is worth it. Spotless, warm, quieter than seems possible.",
+            ),
             ("Tom", 5, "Best kitchen view I have ever chopped an onion in front of."),
         ],
     },
@@ -62,8 +73,16 @@ LISTINGS = [
             "down the hill."
         ),
         "reviews": [
-            ("Jae", 5, "Fell asleep counting stars through the peak window. Perfect weekend."),
-            ("Marisol", 4, "Cozy and immaculate. Bring chains in spring, the last mile is dirt."),
+            (
+                "Jae",
+                5,
+                "Fell asleep counting stars through the peak window. Perfect weekend.",
+            ),
+            (
+                "Marisol",
+                4,
+                "Cozy and immaculate. Bring chains in spring, the last mile is dirt.",
+            ),
         ],
     },
     {
@@ -84,7 +103,11 @@ LISTINGS = [
         ),
         "reviews": [
             ("Devon", 5, "Light for days. Walked everywhere, drove nowhere."),
-            ("Anouk", 4, "Gorgeous space. Mezzanine ladder is not for midnight water runs."),
+            (
+                "Anouk",
+                4,
+                "Gorgeous space. Mezzanine ladder is not for midnight water runs.",
+            ),
         ],
     },
     {
@@ -105,7 +128,11 @@ LISTINGS = [
         ),
         "reviews": [
             ("Ruth", 5, "Slept inside a postcard. The lamp room tour is unmissable."),
-            ("Caleb", 5, "Watched a storm roll in with tea and a blanket. Ten out of five."),
+            (
+                "Caleb",
+                5,
+                "Watched a storm roll in with tea and a blanket. Ten out of five.",
+            ),
         ],
     },
     {
@@ -126,8 +153,16 @@ LISTINGS = [
             "little. That is the point."
         ),
         "reviews": [
-            ("Ines", 5, "Swayed like a very slow boat. Slept better than I have in years."),
-            ("Marcus", 4, "Magical. Pack light — the bridge and your suitcase will disagree."),
+            (
+                "Ines",
+                5,
+                "Swayed like a very slow boat. Slept better than I have in years.",
+            ),
+            (
+                "Marcus",
+                4,
+                "Magical. Pack light — the bridge and your suitcase will disagree.",
+            ),
         ],
     },
     {
@@ -149,7 +184,11 @@ LISTINGS = [
         ),
         "reviews": [
             ("Sofia", 5, "The courtyard makes the heat irrelevant. Stars were absurd."),
-            ("Ben", 5, "Roof deck sunset with a cold drink — the whole trip, honestly."),
+            (
+                "Ben",
+                5,
+                "Roof deck sunset with a cold drink — the whole trip, honestly.",
+            ),
         ],
     },
 ]
@@ -168,15 +207,25 @@ def seed(force: bool) -> None:
     try:
         existing = db.query(Listing).count()
         if existing and not force:
-            print(f"Database already has {existing} listings — nothing to do (use --force to reseed).")
+            print(
+                f"Database already has {existing} listings — nothing to do (use --force to reseed)."
+            )
             return
         if force:
             for model in (Favorite, Review, Booking, Photo, Listing, User, Amenity):
                 db.query(model).delete()
             db.commit()
 
-        host = User(email="host@porchlight.test", name="Ana Morgan", hashed_password=hash_password(PASSWORD))
-        guest = User(email="guest@porchlight.test", name="Sam Rivera", hashed_password=hash_password(PASSWORD))
+        host = User(
+            email="host@porchlight.test",
+            name="Ana Morgan",
+            hashed_password=hash_password(PASSWORD),
+        )
+        guest = User(
+            email="guest@porchlight.test",
+            name="Sam Rivera",
+            hashed_password=hash_password(PASSWORD),
+        )
         db.add_all([host, guest])
         db.flush()
 
@@ -197,7 +246,10 @@ def seed(force: bool) -> None:
                 max_guests=data["guests"],
                 bedrooms=data["bedrooms"],
                 bathrooms=data["bathrooms"],
-                amenities=[get_or_create_amenity(db, amenity_cache, a) for a in data["amenities"]],
+                amenities=[
+                    get_or_create_amenity(db, amenity_cache, a)
+                    for a in data["amenities"]
+                ],
             )
             db.add(listing)
             db.flush()
@@ -212,7 +264,14 @@ def seed(force: bool) -> None:
                     )
                     db.add(reviewer_cache[name])
                     db.flush()
-                db.add(Review(listing=listing, author=reviewer_cache[name], rating=rating, comment=text))
+                db.add(
+                    Review(
+                        listing=listing,
+                        author=reviewer_cache[name],
+                        rating=rating,
+                        comment=text,
+                    )
+                )
 
         # Give the demo guest one past stay (reviewable) and one upcoming trip.
         today = date.today()

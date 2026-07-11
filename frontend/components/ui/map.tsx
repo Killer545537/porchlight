@@ -1,11 +1,13 @@
 'use client';
 
-import MapLibreGL, { type PopupOptions, type MarkerOptions } from 'maplibre-gl';
+import MapLibreGL, { type MarkerOptions, type PopupOptions } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type * as GeoJSON from 'geojson';
+import { Loader2, Locate, Maximize, Minus, Plus, X } from 'lucide-react';
 import {
     createContext,
     forwardRef,
+    type ReactNode,
     useCallback,
     useContext,
     useEffect,
@@ -14,10 +16,8 @@ import {
     useMemo,
     useRef,
     useState,
-    type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Minus, Plus, Locate, Maximize, Loader2 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
@@ -209,7 +209,7 @@ function getViewport(map: MapLibreGL.Map): MapViewport {
     };
 }
 
-const Map = forwardRef<MapRef, MapProps>(function Map(
+const MapRoot = forwardRef<MapRef, MapProps>(function MapRoot(
     {
         children,
         className,
@@ -264,6 +264,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
     }, []);
 
     // Initialize the map
+    // biome-ignore lint/correctness/useExhaustiveDependencies: map instance is created once on mount
     useEffect(() => {
         if (!containerRef.current) return;
 
@@ -316,7 +317,6 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
             setIsStyleLoaded(false);
             setMapInstance(null);
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Sync controlled viewport to map
@@ -456,6 +456,7 @@ function MapMarker({
         onDragEnd,
     };
 
+    // biome-ignore lint/correctness/useExhaustiveDependencies: marker options are applied when the marker is created
     const marker = useMemo(() => {
         const markerInstance = new MapLibreGL.Marker({
             ...markerOptions,
@@ -489,9 +490,7 @@ function MapMarker({
         markerInstance.on('dragend', handleDragEnd);
 
         return markerInstance;
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [draggable, longitude, latitude]);
 
     useEffect(() => {
         if (!map) return;
@@ -503,7 +502,7 @@ function MapMarker({
         };
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [map]);
+    }, [map, marker.addTo, marker.remove]);
 
     const { offset, rotation, rotationAlignment, pitchAlignment } = markerOptions;
 
@@ -605,6 +604,7 @@ function MarkerPopup({
     const container = useMemo(() => document.createElement('div'), []);
     const { offset, maxWidth } = popupOptions;
 
+    // biome-ignore lint/correctness/useExhaustiveDependencies: popup options synced in dedicated effects
     const popup = useMemo(() => {
         const popupInstance = new MapLibreGL.Popup({
             offset: 16,
@@ -615,8 +615,7 @@ function MarkerPopup({
             .setDOMContent(container);
 
         return popupInstance;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [container]);
 
     useEffect(() => {
         if (!map) return;
@@ -628,7 +627,7 @@ function MarkerPopup({
             marker.setPopup(null);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [map]);
+    }, [map, container, popup.setDOMContent, marker.setPopup, popup]);
 
     // Sync popup options when they change.
     useEffect(() => {
@@ -667,6 +666,7 @@ function MarkerTooltip({ children, className, ...popupOptions }: MarkerTooltipPr
     const container = useMemo(() => document.createElement('div'), []);
     const { offset, maxWidth } = popupOptions;
 
+    // biome-ignore lint/correctness/useExhaustiveDependencies: tooltip options synced in dedicated effects
     const tooltip = useMemo(() => {
         const tooltipInstance = new MapLibreGL.Popup({
             offset: 16,
@@ -676,7 +676,6 @@ function MarkerTooltip({ children, className, ...popupOptions }: MarkerTooltipPr
         }).setMaxWidth('none');
 
         return tooltipInstance;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -698,7 +697,15 @@ function MarkerTooltip({ children, className, ...popupOptions }: MarkerTooltipPr
             tooltip.remove();
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [map]);
+    }, [
+        map,
+        marker.getElement,
+        container,
+        marker.getLngLat,
+        tooltip.setDOMContent,
+        tooltip.remove,
+        tooltip.setLngLat,
+    ]);
 
     // Sync tooltip options when they change.
     useEffect(() => {
@@ -993,6 +1000,7 @@ function MapPopup({
     const container = useMemo(() => document.createElement('div'), []);
     const { offset, maxWidth } = popupOptions;
 
+    // biome-ignore lint/correctness/useExhaustiveDependencies: popup options synced in dedicated effects
     const popup = useMemo(() => {
         const popupInstance = new MapLibreGL.Popup({
             offset: 16,
@@ -1003,8 +1011,7 @@ function MapPopup({
             .setLngLat([longitude, latitude]);
 
         return popupInstance;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [latitude, longitude]);
 
     useEffect(() => {
         if (!map) return;
@@ -1023,7 +1030,16 @@ function MapPopup({
             }
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [map]);
+    }, [
+        map,
+        popup.addTo,
+        popup.remove,
+        container,
+        popup.isOpen,
+        popup.setDOMContent,
+        popup.off,
+        popup.on,
+    ]);
 
     // Sync popup position and options when they change.
     useEffect(() => {
@@ -1132,7 +1148,7 @@ function MapRoute({
             }
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isLoaded, map]);
+    }, [isLoaded, map, color, opacity, sourceId, width, dashArray, layerId]);
 
     // When coordinates change, update the source data
     useEffect(() => {
@@ -1149,7 +1165,7 @@ function MapRoute({
     }, [isLoaded, map, coordinates, sourceId]);
 
     useEffect(() => {
-        if (!isLoaded || !map || !map.getLayer(layerId)) return;
+        if (!isLoaded || !map?.getLayer(layerId)) return;
 
         map.setPaintProperty(layerId, 'line-color', color);
         map.setPaintProperty(layerId, 'line-width', width);
@@ -1327,7 +1343,7 @@ function MapGeoJSON<P extends GeoJSON.GeoJsonProperties = GeoJSON.GeoJsonPropert
             }
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isLoaded, map]);
+    }, [isLoaded, map, data, fillLayerId, promoteId, lineLayerId, sourceId]);
 
     // Sync data when it changes.
     useEffect(() => {
@@ -1686,7 +1702,18 @@ function MapArc<T extends MapArcDatum = MapArcDatum>({
             }
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isLoaded, map]);
+    }, [
+        isLoaded,
+        map,
+        mergedLayout,
+        beforeId,
+        layerId,
+        geoJSON,
+        mergedPaint,
+        sourceId,
+        hitWidth,
+        hitLayerId,
+    ]);
 
     // Sync features when data / curvature / samples change.
     useEffect(() => {
@@ -1697,7 +1724,7 @@ function MapArc<T extends MapArcDatum = MapArcDatum>({
 
     // Sync paint/layout when they change.
     useEffect(() => {
-        if (!isLoaded || !map || !map.getLayer(layerId)) return;
+        if (!isLoaded || !map?.getLayer(layerId)) return;
         for (const [key, value] of Object.entries(mergedPaint)) {
             map.setPaintProperty(layerId, key as keyof MapArcLinePaint, value as never);
         }
@@ -1916,7 +1943,20 @@ function MapClusterLayer<P extends GeoJSON.GeoJsonProperties = GeoJSON.GeoJsonPr
             }
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isLoaded, map, sourceId]);
+    }, [
+        isLoaded,
+        map,
+        sourceId,
+        clusterLayerId,
+        data,
+        clusterColors[2],
+        unclusteredLayerId,
+        clusterRadius,
+        clusterThresholds[0],
+        clusterCountLayerId,
+        pointColor,
+        clusterMaxZoom,
+    ]);
 
     // Update source data when data prop changes (only for non-URL data)
     useEffect(() => {
@@ -2065,20 +2105,19 @@ function MapClusterLayer<P extends GeoJSON.GeoJsonProperties = GeoJSON.GeoJsonPr
     return null;
 }
 
+export type { MapArcDatum, MapArcEvent, MapGeoJSONEvent, MapRef, MapViewport };
 export {
-    Map,
-    useMap,
+    MapArc,
+    MapClusterLayer,
+    MapControls,
+    MapGeoJSON,
     MapMarker,
+    MapPopup,
+    MapRoot as Map,
+    MapRoute,
     MarkerContent,
+    MarkerLabel,
     MarkerPopup,
     MarkerTooltip,
-    MarkerLabel,
-    MapPopup,
-    MapControls,
-    MapRoute,
-    MapArc,
-    MapGeoJSON,
-    MapClusterLayer,
+    useMap,
 };
-
-export type { MapRef, MapViewport, MapArcDatum, MapArcEvent, MapGeoJSONEvent };

@@ -64,12 +64,7 @@ function HostInner() {
                     <div className='mono text-[11px] tracking-[0.14em] text-ink3'>
                         {myListings.length} {myListings.length === 1 ? 'LISTING' : 'LISTINGS'} ·{' '}
                         {reservationCount} {reservationCount === 1 ? 'RESERVATION' : 'RESERVATIONS'}
-                        {upcomingCount > 0 && (
-                            <>
-                                {' '}
-                                · {upcomingCount} UPCOMING
-                            </>
-                        )}
+                        {upcomingCount > 0 && <> · {upcomingCount} UPCOMING</>}
                     </div>
                 </div>
                 {!creating && !editing && (
@@ -160,7 +155,8 @@ function HostListingRow({
                             className='mt-0.5 text-[13px] text-ink3'
                             style={{ fontFamily: 'var(--font-sans)' }}
                         >
-                            {listing.city}, {listing.country} · {formatPrice(listing.price_per_night)}
+                            {listing.city}, {listing.country} ·{' '}
+                            {formatPrice(listing.price_per_night)}
                             /night
                         </div>
                         <div
@@ -191,7 +187,7 @@ function HostListingRow({
                                                         ? e.message
                                                         : "Couldn't delete",
                                                 ),
-                                    })
+                                        })
                                     }
                                     className='rounded-porch px-3.5 py-2.5 text-white transition-transform active:scale-95'
                                     style={{
@@ -255,7 +251,10 @@ function HostBookingCard({ booking }: { booking: Booking }) {
                 {formatDateRange(booking.check_in, booking.check_out)} · {booking.guests}{' '}
                 {booking.guests === 1 ? 'guest' : 'guests'}
             </div>
-            <div className='mt-0.5 text-[13px] text-ink3' style={{ fontFamily: 'var(--font-sans)' }}>
+            <div
+                className='mt-0.5 text-[13px] text-ink3'
+                style={{ fontFamily: 'var(--font-sans)' }}
+            >
                 {booking.guest_name}
             </div>
         </div>

@@ -8,7 +8,12 @@ from database import get_db
 from domain.booking.service import BookingService
 from domain.booking.types import BookingRangeOut, ListingAvailabilityOut
 from domain.listing.service import ListingService
-from domain.listing.types import ListingCreate, ListingFilters, ListingOut, ListingUpdate
+from domain.listing.types import (
+    ListingCreate,
+    ListingFilters,
+    ListingOut,
+    ListingUpdate,
+)
 from models import Listing, User
 
 router = APIRouter(prefix="/listings", tags=["listings"])
@@ -67,7 +72,8 @@ def get_listing_availability(
     bookings = BookingService(db).list_availability(listing_id)
     return ListingAvailabilityOut(
         bookings=[
-            BookingRangeOut(check_in=b.check_in, check_out=b.check_out) for b in bookings
+            BookingRangeOut(check_in=b.check_in, check_out=b.check_out)
+            for b in bookings
         ]
     )
 

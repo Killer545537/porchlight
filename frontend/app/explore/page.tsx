@@ -77,13 +77,8 @@ function ExploreInner() {
         max_price: price.max,
         ...(bboxApplies ? bbox : {}),
     };
-    const {
-        data,
-        isLoading,
-        fetchNextPage,
-        hasNextPage,
-        isFetchingNextPage,
-    } = useInfiniteListings(filters);
+    const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+        useInfiniteListings(filters);
 
     const listings = useMemo(() => data?.pages.flat() ?? [], [data]);
 
@@ -131,13 +126,13 @@ function ExploreInner() {
         <>
             <div className='grid grid-cols-[repeat(auto-fill,minmax(min(250px,100%),1fr))] gap-[18px] lg:grid-cols-1 lg:gap-3.5 xl:grid-cols-2'>
                 {results.map((listing) => (
-                    <div
+                    <ListingCard
                         key={listing.id}
+                        listing={listing}
+                        highlighted={hovered === listing.id}
                         onMouseEnter={() => setHovered(listing.id)}
                         onMouseLeave={() => setHovered(null)}
-                    >
-                        <ListingCard listing={listing} highlighted={hovered === listing.id} />
-                    </div>
+                    />
                 ))}
             </div>
             {hasNextPage && (

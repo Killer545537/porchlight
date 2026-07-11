@@ -10,7 +10,7 @@ import { GalleryOverlay } from '@/components/GalleryOverlay';
 import { MapView } from '@/components/MapView';
 import { useToast } from '@/components/ToastProvider';
 import { CenterLoader, EmptyState, Stepper } from '@/components/ui';
-import { type DateRange, blockedNights, pickDateAvoidingBlocked } from '@/lib/dateRange';
+import { blockedNights, type DateRange, pickDateAvoidingBlocked } from '@/lib/dateRange';
 import { formatPrice, formatShortDate, nightsBetween } from '@/lib/format';
 import {
     useAddFavorite,
@@ -48,10 +48,7 @@ export default function ListingPage() {
 
     const photos = useMemo(() => (listing ? listingPhotos(listing) : []), [listing]);
     const photoLabels = useMemo(() => photos.map((_, i) => `VIEW ${i + 1}`), [photos]);
-    const blocked = useMemo(
-        () => blockedNights(availability?.bookings ?? []),
-        [availability],
-    );
+    const blocked = useMemo(() => blockedNights(availability?.bookings ?? []), [availability]);
 
     if (isLoading) return <CenterLoader />;
     if (isError || !listing) {

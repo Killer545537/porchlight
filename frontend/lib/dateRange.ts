@@ -21,9 +21,7 @@ export function pickDate(range: DateRange, iso: string): DateRange {
 }
 
 // Expand booking ranges into blocked night ISO strings (check_in inclusive, check_out exclusive).
-export function blockedNights(
-    bookings: { check_in: string; check_out: string }[],
-): Set<string> {
+export function blockedNights(bookings: { check_in: string; check_out: string }[]): Set<string> {
     const blocked = new Set<string>();
     for (const { check_in, check_out } of bookings) {
         let d = parseISODate(check_in);
@@ -54,7 +52,11 @@ export function pickDateAvoidingBlocked(
 ): DateRange {
     if (blocked.has(isoDay)) return range;
     const next = pickDate(range, isoDay);
-    if (next.checkIn && next.checkOut && rangeHasBlockedNight(next.checkIn, next.checkOut, blocked)) {
+    if (
+        next.checkIn &&
+        next.checkOut &&
+        rangeHasBlockedNight(next.checkIn, next.checkOut, blocked)
+    ) {
         return { checkIn: isoDay, checkOut: null };
     }
     return next;

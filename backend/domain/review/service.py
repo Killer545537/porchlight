@@ -17,25 +17,34 @@ class ReviewService:
         self.booking_repo = BookingRepository(db)
         self.listing_repo = ListingRepository(db)
 
-    def create_review(self, listing_id: int, author_id: int, data: ReviewCreate) -> Review:
+    def create_review(
+        self, listing_id: int, author_id: int, data: ReviewCreate
+    ) -> Review:
         listing = self.listing_repo.get_by_id(listing_id)
         if listing is None:
             raise NotFoundError(f"Listing {listing_id} not found")
-        if not self.booking_repo.has_completed_stay(listing_id, author_id, before=date.today()):
+        if not self.booking_repo.has_completed_stay(
+            listing_id, author_id, before=date.today()
+        ):
             raise ForbiddenError("You can only review a listing after a completed stay")
         if self.repo.get_by_listing_and_author(listing_id, author_id) is not None:
             raise ConflictError("You've already reviewed this listing")
 
         review = self.repo.create(listing_id, author_id, data)
         request_logger.info(
-            "review created: id=%s listing_id=%s author_id=%s", review.id, listing_id, author_id
+            "review created: id=%s listing_id=%s author_id=%s",
+            review.id,
+            listing_id,
+            author_id,
         )
         return review
 
     def list_for_listing(self, listing_id: int) -> list[Review]:
         return self.repo.list_for_listing(listing_id)
 
-    def update_review(self, review_id: int, author_id: int, data: ReviewUpdate) -> Review:
+    def update_review(
+        self, review_id: int, author_id: int, data: ReviewUpdate
+    ) -> Review:
         review = self.repo.get_by_id(review_id)
         if review is None:
             raise NotFoundError(f"Review {review_id} not found")
